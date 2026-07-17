@@ -2,1984 +2,1094 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tawrat Rustam — CS Graduate & AI Engineer</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0e141b">
+<title>Price Scanner</title>
 <style>
   :root {
-    --bg: #080c10;
-    --surface: #0e141b;
-    --card: #141c24;
-    --border: #1e2d3d;
+    --bg: #0b1015;
+    --surface: #131b23;
+    --card: #1a242f;
+    --border: #27374a;
     --accent: #00d4ff;
-    --accent2: #7c3aed;
-    --text: #e8eef5;
-    --muted: #6b7d8e;
     --green: #00e5a0;
+    --red: #ff5c72;
+    --amber: #ffc24b;
+    --text: #eef4fa;
+    --muted: #7e93a8;
   }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 14px;
-    line-height: 1.7;
-    overflow-x: hidden;
-  }
-
-  /* Background grid */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Glow orbs */
-  .orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(100px);
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.15;
-  }
-  .orb1 { width: 600px; height: 600px; background: var(--accent2); top: -200px; right: -200px; }
-  .orb2 { width: 400px; height: 400px; background: var(--accent); bottom: 10%; left: -150px; }
-
-  .wrapper {
-    position: relative;
-    z-index: 1;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  /* Nav */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    background: rgba(8,12,16,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  nav .inner {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-  }
-
-  .nav-logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    color: var(--accent);
-    letter-spacing: -0.5px;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 28px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: color 0.2s;
-  }
-
-  .nav-links a:hover { color: var(--accent); }
-
-  /* Hero */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-top: 56px;
-  }
-
-  .hero-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0,212,255,0.08);
-    border: 1px solid rgba(0,212,255,0.2);
-    color: var(--accent);
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 32px;
-    width: fit-content;
-    animation: fadeUp 0.6s ease both;
-  }
-
-  .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  h1 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(42px, 7vw, 80px);
-    line-height: 1;
-    letter-spacing: -2px;
-    margin-bottom: 24px;
-    animation: fadeUp 0.6s 0.1s ease both;
-  }
-
-  h1 span { color: var(--accent); }
-
-  .hero-sub {
-    font-size: 15px;
-    color: var(--muted);
-    max-width: 520px;
-    line-height: 1.8;
-    margin-bottom: 40px;
-    animation: fadeUp 0.6s 0.2s ease both;
-  }
-
-  .hero-actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    animation: fadeUp 0.6s 0.3s ease both;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    text-decoration: none;
-    transition: all 0.2s;
-    cursor: pointer;
-    border: none;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: var(--bg);
-    font-weight: 500;
-  }
-
-  .btn-primary:hover {
-    background: #33ddff;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(0,212,255,0.25);
-  }
-
-  .btn-outline {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
-  .btn-outline:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: translateY(-1px);
-  }
-
-  /* Stats row */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-top: 80px;
-    animation: fadeUp 0.6s 0.4s ease both;
-  }
-
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-  }
-
-  .stat-number {
-    font-family: 'Syne', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--accent);
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-
-  /* Sections */
-  section {
-    padding: 80px 0;
-    border-top: 1px solid var(--border);
-  }
-
-  .section-label {
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
-  }
-
-  h2 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 32px;
-    letter-spacing: -1px;
-    margin-bottom: 40px;
-  }
-
-  /* About */
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: start;
-  }
-
-  .about-text p {
-    color: #9aaab8;
-    margin-bottom: 16px;
-    font-size: 14px;
-  }
-
-  .detail-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .detail-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 12px;
-  }
-
-  .detail-list li .key {
-    color: var(--accent);
-    min-width: 80px;
-    flex-shrink: 0;
-  }
-
-  .detail-list li .val { color: var(--text); }
-
-  /* Skills */
-  .skills-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-  }
-
-  .skill-group {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-  }
-
-  .skill-group-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .skill-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .tag {
-    background: rgba(0,212,255,0.06);
-    border: 1px solid rgba(0,212,255,0.15);
-    color: #9aaab8;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-  }
-
-  /* Experience / Education timeline */
-  .timeline {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 8px;
-    bottom: 8px;
-    width: 1px;
-    background: linear-gradient(to bottom, var(--accent), transparent);
-  }
-
-  .tl-item {
-    padding-left: 28px;
-    position: relative;
-  }
-
-  .tl-item::before {
-    content: '';
-    position: absolute;
-    left: -4px;
-    top: 6px;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 12px var(--accent);
-  }
-
-  .tl-date {
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .tl-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    margin-bottom: 2px;
-  }
-
-  .tl-org {
-    color: var(--muted);
-    font-size: 12px;
-    margin-bottom: 10px;
-  }
-
-  .tl-body {
-    color: #7d8e9e;
-    font-size: 13px;
-    line-height: 1.8;
-  }
-
-  /* Projects */
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 20px;
-  }
-
-  .project-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    transition: all 0.25s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .project-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent);
-    opacity: 0;
-    transition: opacity 0.25s;
-  }
-
-  .project-card:hover {
-    border-color: rgba(0,212,255,0.3);
-    transform: translateY(-3px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
-  }
-
-  .project-card:hover::after { opacity: 1; }
-
-  .project-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-  }
-
-  .project-icon {
-    font-size: 22px;
-  }
-
-  .project-status {
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: rgba(0,229,160,0.1);
-    color: var(--green);
-    border: 1px solid rgba(0,229,160,0.2);
-  }
-
-  .project-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    margin-bottom: 8px;
-  }
-
-  .project-desc {
-    color: #7d8e9e;
-    font-size: 12px;
-    line-height: 1.8;
-    margin-bottom: 16px;
-  }
-
-  .project-tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .tech-tag {
-    background: rgba(124,58,237,0.1);
-    border: 1px solid rgba(124,58,237,0.2);
-    color: #a78bfa;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-  }
-
-  /* Contact */
-  .contact-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .contact-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    text-decoration: none;
-    color: var(--text);
-    transition: all 0.2s;
-  }
-
-  .contact-card:hover {
-    border-color: rgba(0,212,255,0.3);
-    transform: translateY(-2px);
-  }
-
-  .contact-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .contact-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .contact-val { font-size: 13px; font-weight: 500; margin-top: 2px; }
-
-  /* Proficiency bars */
-  .proficiency-section {
-    margin-top: 48px;
-  }
-
-  .prof-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    margin-bottom: 28px;
-    color: var(--text);
-  }
-
-  .prof-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .prof-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .prof-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .prof-name {
-    font-size: 13px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .prof-name .lang-icon {
-    font-size: 15px;
-  }
-
-  .prof-pct {
-    font-size: 11px;
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  .prof-bar-bg {
-    height: 4px;
-    background: var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .prof-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    width: 0%;
-    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
-  }
-
-  /* ML/AI highlight card */
-  .ai-highlight {
-    background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,212,255,0.06));
-    border: 1px solid rgba(124,58,237,0.25);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 32px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .ai-highlight::before {
-    content: 'AI / ML';
-    position: absolute;
-    right: 24px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-family: 'Syne', sans-serif;
-    font-size: 72px;
-    font-weight: 800;
-    color: rgba(124,58,237,0.07);
-    letter-spacing: -2px;
-    pointer-events: none;
-  }
-
-  .ai-highlight-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: #a78bfa;
-    margin-bottom: 14px;
-    letter-spacing: 0.5px;
-  }
-
-  .ai-tag-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .ai-tag {
-    background: rgba(124,58,237,0.15);
-    border: 1px solid rgba(124,58,237,0.3);
-    color: #c4b5fd;
-    padding: 5px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  /* Project Preview / Modal */
-  .preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 20px;
-  }
-
-  .preview-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    transition: all 0.25s;
-    cursor: pointer;
-    position: relative;
-  }
-
-  .preview-card:hover {
-    border-color: rgba(0,212,255,0.35);
-    transform: translateY(-4px);
-    box-shadow: 0 20px 48px rgba(0,0,0,0.5);
-  }
-
-  .preview-thumb {
-    height: 180px;
+    font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    font-size: 17px;
+    overscroll-behavior: none;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; }
+  input, select { font-family: inherit; }
+  img { display: block; }
+
+  .screen { display: none; min-height: 100dvh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
     background: var(--surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48px;
-    position: relative;
-    overflow: hidden;
     border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
   }
-
-  .preview-thumb .thumb-bg {
-    position: absolute;
-    inset: 0;
-    opacity: 0.12;
-    background-size: 30px 30px;
-  }
-
-  .preview-thumb .thumb-emoji {
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-  }
-
-  .preview-hover-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,212,255,0.08);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s;
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    gap: 8px;
-  }
-
-  .preview-card:hover .preview-hover-overlay { opacity: 1; }
-
-  .preview-body {
-    padding: 20px;
-  }
-
-  .preview-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .preview-category {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .preview-year {
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .preview-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
-
-  .preview-blurb {
-    font-size: 12px;
-    color: #7d8e9e;
-    line-height: 1.7;
-    margin-bottom: 14px;
-  }
-
-  .preview-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  /* Modal */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(4,8,12,0.92);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .modal {
-    background: var(--card);
+  .topbar h1 { font-size: 19px; font-weight: 700; flex: 1; }
+  .back-btn {
+    background: var(--card); color: var(--text);
+    width: 44px; height: 44px; border-radius: 12px;
+    font-size: 22px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
     border: 1px solid var(--border);
-    border-radius: 20px;
-    max-width: 680px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    transform: scale(0.92) translateY(20px);
-    transition: transform 0.3s;
+  }
+  .icon-btn {
+    background: var(--card); color: var(--text);
+    height: 44px; padding: 0 14px; border-radius: 12px;
+    font-size: 20px; border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .icon-btn span { font-size: 14px; color: var(--muted); }
+
+  /* ---------- Warehouse pill ---------- */
+  .wh-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 10px 16px;
+    color: var(--text); font-size: 16px; font-weight: 600;
+  }
+  .wh-pill .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+
+  /* ---------- Home ---------- */
+  .home-body { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 16px; max-width: 560px; width: 100%; margin: 0 auto; }
+
+  .scan-big {
+    background: linear-gradient(135deg, #00b8e0, #0077ff);
+    color: #fff; border-radius: 24px;
+    padding: 32px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    font-size: 22px; font-weight: 800;
+    box-shadow: 0 8px 30px rgba(0, 150, 255, 0.35);
+  }
+  .scan-big .big-ico { font-size: 56px; line-height: 1; }
+  .scan-big:active { transform: scale(0.98); }
+
+  .search-row { display: flex; gap: 10px; }
+  .search-row input {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 14px; padding: 14px 16px;
+    font-size: 17px; outline: none; min-width: 0;
+  }
+  .search-row input:focus { border-color: var(--accent); }
+  .search-row button {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 14px; width: 54px; font-size: 22px; flex: none;
   }
 
-  .modal-overlay.open .modal {
-    transform: scale(1) translateY(0);
+  .keypad-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 14px; padding: 14px;
+    font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
   }
 
-  .modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 28px 28px 0;
-    gap: 16px;
+  .section-label { color: var(--muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ---------- Product grid / list ---------- */
+  .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .prod-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; text-align: left; color: var(--text);
+    display: flex; flex-direction: column;
+  }
+  .prod-card:active { transform: scale(0.97); }
+  .prod-card .thumb { width: 100%; aspect-ratio: 1; object-fit: cover; background: #0a1118; }
+  .prod-card .info { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .prod-card .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prod-card .price { font-size: 20px; font-weight: 800; color: var(--green); }
+  .prod-card .price.none { color: var(--muted); font-size: 14px; font-weight: 600; }
+  .stock-chip { font-size: 12px; font-weight: 700; border-radius: 6px; padding: 1px 7px; align-self: flex-start; }
+  .stock-ok  { background: rgba(0,229,160,.15); color: var(--green); }
+  .stock-low { background: rgba(255,194,75,.15); color: var(--amber); }
+  .stock-out { background: rgba(255,92,114,.15); color: var(--red); }
+
+  .empty-note { color: var(--muted); text-align: center; padding: 40px 20px; font-size: 16px; line-height: 1.6; }
+  .empty-note .big-ico { font-size: 48px; display: block; margin-bottom: 12px; }
+
+  /* ---------- Scanner ---------- */
+  #screen-scan { background: #000; }
+  .scan-view { position: relative; flex: 1; overflow: hidden; display: flex; }
+  .scan-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .scan-frame {
+    position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    width: min(78vw, 420px); height: 44vw; max-height: 240px;
+    border-radius: 18px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+    outline: 3px solid var(--accent);
+  }
+  .scan-frame::after {
+    content: ''; position: absolute; left: 8%; right: 8%; top: 50%; height: 2px;
+    background: var(--red); opacity: .8;
+    animation: scanline 1.6s ease-in-out infinite alternate;
+  }
+  @keyframes scanline { from { transform: translateY(-40px); } to { transform: translateY(40px); } }
+  .scan-hint {
+    position: absolute; left: 0; right: 0; top: calc(42% + 140px);
+    text-align: center; color: #fff; font-size: 17px; font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0,0,0,.8); padding: 0 20px;
+  }
+  .scan-bottom {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .scan-close {
+    position: absolute; top: 14px; right: 14px; z-index: 5;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(0,0,0,.55); color: #fff; font-size: 22px;
+    border: 1px solid rgba(255,255,255,.25);
+  }
+  .scan-err {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 30px; text-align: center; color: #fff; background: #000;
   }
 
-  .modal-icon {
-    font-size: 40px;
-    line-height: 1;
+  /* ---------- Manual keypad ---------- */
+  .keypad-wrap { flex: 1; display: flex; flex-direction: column; padding: 16px; max-width: 420px; width: 100%; margin: 0 auto; }
+  .keypad-display {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    font-size: 30px; font-weight: 700; letter-spacing: 3px;
+    padding: 18px; text-align: center; min-height: 74px; margin-bottom: 16px;
+    word-break: break-all;
+  }
+  .keypad-display .ph { color: var(--muted); font-size: 17px; letter-spacing: 0; font-weight: 500; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .keypad button {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    font-size: 26px; font-weight: 700; border-radius: 16px; padding: 18px 0;
+  }
+  .keypad button:active { background: var(--border); }
+  .keypad .go { background: var(--green); color: #04301f; font-size: 24px; }
+  .keypad .del { color: var(--red); }
+
+  /* ---------- Product detail ---------- */
+  .detail-body { flex: 1; padding-bottom: 30px; max-width: 560px; width: 100%; margin: 0 auto; }
+  .detail-photo { width: 100%; aspect-ratio: 1.15; object-fit: cover; background: #0a1118; }
+  .detail-info { padding: 18px 16px; display: flex; flex-direction: column; gap: 16px; }
+  .detail-name { font-size: 26px; font-weight: 800; line-height: 1.25; }
+  .detail-barcode { color: var(--muted); font-size: 14px; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+
+  .price-box {
+    background: var(--card); border: 2px solid var(--green); border-radius: 20px;
+    padding: 18px; display: flex; align-items: center; gap: 14px;
+  }
+  .price-box .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .price-box .wh-name { font-size: 15px; color: var(--muted); font-weight: 600; }
+  .price-box .amount { font-size: 40px; font-weight: 800; color: var(--green); line-height: 1.1; }
+  .price-box .amount.out { color: var(--red); font-size: 26px; }
+  .price-box .grow { flex: 1; min-width: 0; }
+  .price-box .stock-chip { font-size: 14px; padding: 3px 10px; }
+
+  .other-wh-list { display: flex; flex-direction: column; gap: 10px; }
+  .wh-row {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+    color: var(--text); text-align: left; width: 100%;
+  }
+  .wh-row:active { background: var(--border); }
+  .wh-row .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .wh-row .grow { flex: 1; min-width: 0; }
+  .wh-row .wname { font-weight: 700; font-size: 16px; }
+  .wh-row .wprice { font-size: 22px; font-weight: 800; color: var(--green); }
+  .wh-row .wprice.none { color: var(--muted); font-size: 14px; font-weight: 600; }
+
+  /* ---------- Forms (admin) ---------- */
+  .form-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; max-width: 560px; width: 100%; margin: 0 auto; padding-bottom: 40px; }
+  .field label { display: block; color: var(--muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 14px; padding: 14px 16px; font-size: 17px; outline: none;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .barcode-field { display: flex; gap: 10px; }
+  .barcode-field input { flex: 1; min-width: 0; }
+  .barcode-field button { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 14px; width: 56px; font-size: 22px; flex: none; }
+
+  .photo-pick {
+    width: 100%; aspect-ratio: 1.6; border-radius: 18px; overflow: hidden;
+    background: var(--card); border: 2px dashed var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; color: var(--muted); font-size: 16px; font-weight: 600; position: relative;
+  }
+  .photo-pick img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .photo-pick .big-ico { font-size: 44px; }
+
+  .wh-price-row {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .wh-price-row .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .wh-price-row .wname { flex: 1; font-weight: 700; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wh-price-row input {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 10px; font-size: 17px; text-align: center; outline: none;
+  }
+  .wh-price-row .price-in { width: 90px; }
+  .wh-price-row .stock-in { width: 64px; }
+  .mini-label { font-size: 11px; color: var(--muted); text-align: center; display: block; margin-bottom: 3px; }
+
+  .primary-btn {
+    background: var(--green); color: #04301f; border-radius: 16px;
+    padding: 17px; font-size: 19px; font-weight: 800; width: 100%;
+  }
+  .primary-btn:active { opacity: .85; }
+  .danger-btn {
+    background: transparent; color: var(--red); border: 1px solid var(--red);
+    border-radius: 16px; padding: 14px; font-size: 16px; font-weight: 700; width: 100%;
+  }
+  .ghost-btn {
+    background: var(--card); color: var(--text); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px; font-size: 16px; font-weight: 700; width: 100%;
   }
 
-  .modal-close {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.2s;
-    flex-shrink: 0;
+  /* ---------- Admin list ---------- */
+  .admin-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; width: 100%; margin: 0 auto; }
+  .admin-row {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 10px; display: flex; align-items: center; gap: 12px; width: 100%;
+    color: var(--text); text-align: left;
   }
+  .admin-row img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: #0a1118; flex: none; }
+  .admin-row .grow { flex: 1; min-width: 0; }
+  .admin-row .name { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .admin-row .sub { color: var(--muted); font-size: 13px; }
+  .admin-row .chev { color: var(--muted); font-size: 20px; }
 
-  .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.1); }
-
-  .modal-body { padding: 20px 28px 28px; }
-
-  .modal-status-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+  /* ---------- Modal / sheet ---------- */
+  .sheet-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50;
+    display: none; align-items: flex-end; justify-content: center;
   }
-
-  .modal-badge {
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    letter-spacing: 0.5px;
+  .sheet-backdrop.open { display: flex; }
+  .sheet {
+    background: var(--surface); border-radius: 22px 22px 0 0;
+    width: 100%; max-width: 560px; padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px; max-height: 80dvh; overflow-y: auto;
   }
+  .sheet h2 { font-size: 18px; margin-bottom: 4px; }
+  .sheet .wh-row { background: var(--card); }
 
-  .badge-status {
-    background: rgba(0,229,160,0.1);
-    color: var(--green);
-    border: 1px solid rgba(0,229,160,0.2);
+  .toast {
+    position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    border-radius: 14px; padding: 12px 20px; font-size: 15px; font-weight: 600;
+    z-index: 100; opacity: 0; transition: opacity .25s; pointer-events: none;
+    max-width: 90vw; text-align: center;
   }
+  .toast.show { opacity: 1; }
 
-  .badge-year {
-    background: rgba(0,212,255,0.08);
-    color: var(--accent);
-    border: 1px solid rgba(0,212,255,0.15);
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav {
+    position: sticky; bottom: 0; z-index: 10;
+    display: flex; background: var(--surface); border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
   }
-
-  .modal-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 22px;
-    margin-bottom: 16px;
-    letter-spacing: -0.5px;
-    line-height: 1.2;
+  .bottom-nav button {
+    flex: 1; background: none; color: var(--muted); padding: 10px 0 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 12px; font-weight: 700;
   }
+  .bottom-nav button .ico { font-size: 24px; line-height: 1; }
+  .bottom-nav button.on { color: var(--accent); }
 
-  .modal-section {
-    margin-bottom: 20px;
+  .lang-row { display: flex; gap: 8px; }
+  .lang-row button {
+    flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text);
+    border-radius: 12px; padding: 12px 0; font-size: 15px; font-weight: 700;
   }
+  .lang-row button.on { border-color: var(--accent); color: var(--accent); }
 
-  .modal-section-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .modal-section p {
-    font-size: 13px;
-    color: #8a9fb3;
-    line-height: 1.8;
-  }
-
-  .modal-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .modal-features li {
-    font-size: 13px;
-    color: #8a9fb3;
-    display: flex;
-    gap: 10px;
-    line-height: 1.6;
-  }
-
-  .modal-features li::before {
-    content: '→';
-    color: var(--accent);
-    flex-shrink: 0;
-  }
-
-  .modal-tech-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .modal-footer {
-    padding: 0 28px 28px;
-    display: flex;
-    gap: 12px;
-  }
-
-  /* Download CV banner */
-  .cv-banner {
-    background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(124,58,237,0.08));
-    border: 1px solid rgba(0,212,255,0.2);
-    border-radius: 16px;
-    padding: 40px;
-    text-align: center;
-    margin: 40px 0 0;
-  }
-
-  .cv-banner h3 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    margin-bottom: 10px;
-  }
-
-  .cv-banner p {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 24px;
-  }
-
-  /* Boost section */
-  .boost-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  .boost-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px;
-    transition: all 0.2s;
-    text-decoration: none;
-    color: var(--text);
-    display: block;
-  }
-
-  .boost-card:hover {
-    border-color: rgba(0,212,255,0.3);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
-  }
-
-  .boost-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-
-  .boost-icon { font-size: 26px; }
-
-  .boost-pill {
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
-  }
-
-  .pill-free { background: rgba(0,229,160,0.1); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
-  .pill-cert { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-  .pill-portfolio { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); }
-  .pill-network { background: rgba(0,212,255,0.08); color: var(--accent); border: 1px solid rgba(0,212,255,0.15); }
-
-  .boost-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    margin-bottom: 8px;
-  }
-
-  .boost-desc {
-    font-size: 12px;
-    color: #7d8e9e;
-    line-height: 1.7;
-    margin-bottom: 12px;
-  }
-
-  .boost-link {
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-  }
-
-  .boost-divider {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin: 36px 0 24px;
-  }
-
-  .boost-divider-line { flex: 1; height: 1px; background: var(--border); }
-  .boost-divider-text { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
-
-  /* LeetCode progress */
-  .lc-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 32px;
-  }
-
-  .lc-stat {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-  }
-
-  .lc-num {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 26px;
-    margin-bottom: 4px;
-  }
-
-  .lc-label { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
-
-  .lc-easy { color: var(--green); }
-  .lc-med { color: #fbbf24; }
-  .lc-hard { color: #f87171; }
-
-  /* Footer */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 32px 0;
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Scroll reveal */
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  @media (max-width: 640px) {
-    .about-grid, .contact-grid { grid-template-columns: 1fr; }
-    .projects-grid { grid-template-columns: 1fr; }
-    .stats { grid-template-columns: 1fr; }
-    h1 { font-size: 38px; }
-    .nav-links { display: none; }
-  }
+  [dir="rtl"] .back-btn { transform: scaleX(-1); }
 </style>
 </head>
 <body>
 
-<div class="orb orb1"></div>
-<div class="orb orb2"></div>
-
-<!-- Nav -->
-<nav>
-  <div class="inner">
-    <div class="nav-logo">tawrat.dev</div>
-    <ul class="nav-links">
-      <li><a href="#about">About</a></li>
-      <li><a href="#skills">Skills</a></li>
-      <li><a href="#projects">Projects</a></li>
-      <li><a href="#preview">Preview</a></li>
-      <li><a href="#education">Education</a></li>
-      <li><a href="#boost">Extras</a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
+<!-- ================= HOME ================= -->
+<div class="screen active" id="screen-home">
+  <div class="topbar">
+    <h1 data-i18n="appTitle">Price Scanner</h1>
+    <button class="wh-pill" id="home-wh-pill" onclick="openWhPicker()">
+      <span class="dot" id="home-wh-dot"></span>
+      <span id="home-wh-name"></span>
+      <span style="color:var(--muted)">▾</span>
+    </button>
   </div>
-</nav>
+  <div class="home-body">
+    <button class="scan-big" onclick="startScan('lookup')">
+      <span class="big-ico">📷</span>
+      <span data-i18n="scanBtn">SCAN BARCODE</span>
+    </button>
 
-<!-- Hero -->
-<div class="wrapper">
-  <section class="hero">
-    <div class="hero-tag">
-      <span class="dot"></span>
-      Available for opportunities
+    <div class="search-row">
+      <input id="search-input" data-i18n-ph="searchPh" placeholder="Search product…" oninput="renderHomeList()">
+      <button onclick="document.getElementById('search-input').focus()">🔍</button>
     </div>
-    <h1>CS Graduate<br>&amp; <span>AI Engineer</span></h1>
-    <p class="hero-sub">Final-year Computer Science with Artificial Intelligence student at the University of Liverpool, targeting a First Class Honours degree. Specialising in AI safety, adversarial machine learning, and full-stack development. Company director with real-world leadership experience.</p>
-    <div class="hero-actions">
-      <a href="#projects" class="btn btn-primary">View My Work →</a>
-      <a href="#contact" class="btn btn-outline">Get In Touch</a>
-      <a href="#" class="btn btn-outline" onclick="window.print(); return false;">Download CV ↓</a>
-    </div>
+    <button class="keypad-btn" onclick="showScreen('keypad')">
+      <span style="font-size:20px">🔢</span> <span data-i18n="typeBarcode">Type barcode number</span>
+    </button>
 
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-number">4+</div>
-        <div class="stat-label">Years CS Study</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">Honours</div>
-        <div class="stat-label">Degree Level</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">Director</div>
-        <div class="stat-label">Business Experience</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- About -->
-  <section id="about" class="reveal">
-    <div class="section-label">// 01 — About</div>
-    <h2>Who I Am</h2>
-    <div class="about-grid">
-      <div class="about-text">
-        <p>I'm a final-year Computer Science Honours student at the University of Liverpool (Student ID: 201663450), building my dissertation on an automated adversarial AI competition platform under Dr. Xiaowei Huang.</p>
-        <p>My academic work spans computer vision, cloud computing, AI safety, and software engineering — backed by real business experience as a company director, where I managed operations, billing, and teams.</p>
-        <p>I'm driven by building systems that are both technically rigorous and practically useful — from cloud-native web apps to adversarial deep learning pipelines.</p>
-      </div>
-      <ul class="detail-list">
-        <li><span class="key">📍 Location</span><span class="val">United Kingdom</span></li>
-        <li><span class="key">🎓 University</span><span class="val">University of Liverpool</span></li>
-        <li><span class="key">📚 Degree</span><span class="val">BSc CS with Artificial Intelligence (Hons)</span></li>
-        <li><span class="key">🔬 Supervisor</span><span class="val">Dr. Xiaowei Huang</span></li>
-        <li><span class="key">💼 Role</span><span class="val">Company Director (concurrent)</span></li>
-        <li><span class="key">📅 Graduating</span><span class="val">Expected 2025</span></li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- Skills -->
-  <section id="skills" class="reveal">
-    <div class="section-label">// 02 — Skills</div>
-    <h2>Technical Expertise</h2>
-
-    <!-- AI / ML Highlight -->
-    <div class="ai-highlight">
-      <div class="ai-highlight-title">🧠 Machine Learning &amp; Artificial Intelligence</div>
-      <div class="ai-tag-row">
-        <span class="ai-tag">Machine Learning</span>
-        <span class="ai-tag">Artificial Intelligence</span>
-        <span class="ai-tag">Deep Learning</span>
-        <span class="ai-tag">Neural Networks</span>
-        <span class="ai-tag">Adversarial ML</span>
-        <span class="ai-tag">AI Safety</span>
-        <span class="ai-tag">Model Evaluation</span>
-        <span class="ai-tag">Feature Engineering</span>
-        <span class="ai-tag">Computer Vision</span>
-        <span class="ai-tag">SIFT / SURF / ORB</span>
-        <span class="ai-tag">Canny Edge Detection</span>
-        <span class="ai-tag">Classification</span>
-        <span class="ai-tag">Data Mining</span>
-        <span class="ai-tag">Biocomputation</span>
-      </div>
-    </div>
-
-    <div class="skills-grid">
-      <div class="skill-group">
-        <div class="skill-group-title">🤖 AI Frameworks</div>
-        <div class="skill-tags">
-          <span class="tag">PyTorch</span>
-          <span class="tag">OpenCV</span>
-          <span class="tag">NumPy</span>
-          <span class="tag">scikit-learn</span>
-          <span class="tag">Matplotlib</span>
-          <span class="tag">Pandas</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title">☁️ Cloud & DevOps</div>
-        <div class="skill-tags">
-          <span class="tag">Docker</span>
-          <span class="tag">Kubernetes</span>
-          <span class="tag">AWS</span>
-          <span class="tag">Cloud Architecture</span>
-          <span class="tag">CI/CD</span>
-          <span class="tag">COMP315</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title">🌐 Web Development</div>
-        <div class="skill-tags">
-          <span class="tag">React</span>
-          <span class="tag">Flask</span>
-          <span class="tag">FastAPI</span>
-          <span class="tag">Node.js</span>
-          <span class="tag">PostgreSQL</span>
-          <span class="tag">JWT Auth</span>
-          <span class="tag">REST APIs</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title">🧬 Other CS</div>
-        <div class="skill-tags">
-          <span class="tag">Software Engineering II</span>
-          <span class="tag">OOP Design Patterns</span>
-          <span class="tag">Advanced AI</span>
-          <span class="tag">Algorithms</span>
-          <span class="tag">Data Structures</span>
-        </div>
-      </div>
-      <div class="skill-group">
-        <div class="skill-group-title">🏢 Business</div>
-        <div class="skill-tags">
-          <span class="tag">Company Direction</span>
-          <span class="tag">Leadership</span>
-          <span class="tag">Billing & Finance</span>
-          <span class="tag">Project Management</span>
-          <span class="tag">Risk Management</span>
-          <span class="tag">Trading & Markets</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Language Proficiency Bars -->
-    <div class="proficiency-section">
-      <div class="prof-title">Language Proficiency</div>
-      <div class="prof-grid" id="profGrid">
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">🐍</span> Python</div>
-            <div class="prof-pct">90%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="90"></div></div>
-        </div>
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">🔥</span> PyTorch</div>
-            <div class="prof-pct">82%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="82"></div></div>
-        </div>
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">🗄️</span> SQL</div>
-            <div class="prof-pct">78%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="78"></div></div>
-        </div>
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">⚛️</span> JavaScript / React</div>
-            <div class="prof-pct">75%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="75"></div></div>
-        </div>
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">☕</span> Java</div>
-            <div class="prof-pct">70%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="70"></div></div>
-        </div>
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">🍎</span> Swift (iOS)</div>
-            <div class="prof-pct">60%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="60"></div></div>
-        </div>
-        <div class="prof-item">
-          <div class="prof-header">
-            <div class="prof-name"><span class="lang-icon">🐚</span> Bash / CLI</div>
-            <div class="prof-pct">65%</div>
-          </div>
-          <div class="prof-bar-bg"><div class="prof-bar-fill" data-width="65"></div></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Projects (cards) -->
-  <section id="projects" class="reveal">
-    <div class="section-label">// 03 — Projects</div>
-    <h2>What I've Built</h2>
-    <div class="projects-grid">
-      <div class="project-card">
-        <div class="project-header">
-          <div class="project-icon">🛡️</div>
-          <div class="project-status">Dissertation</div>
-        </div>
-        <div class="project-title">Adversarial AI Competition Platform</div>
-        <div class="project-desc">Full-stack web platform for automated evaluation of adversarial ML attacks and defenses. Students upload Python attack methods and PyTorch defense models, scored against 10 baselines via Docker-isolated evaluation with live leaderboards.</div>
-        <div class="project-tech">
-          <span class="tech-tag">React</span>
-          <span class="tech-tag">Flask</span>
-          <span class="tech-tag">PyTorch</span>
-          <span class="tech-tag">Docker</span>
-          <span class="tech-tag">PostgreSQL</span>
-          <span class="tech-tag">SQL</span>
-        </div>
-      </div>
-
-      <div class="project-card">
-        <div class="project-header">
-          <div class="project-icon">👁️</div>
-          <div class="project-status">Coursework</div>
-        </div>
-        <div class="project-title">Computer Vision: Feature Extraction & Edge Detection</div>
-        <div class="project-desc">Implemented Canny edge detection from scratch and comparative analysis of SIFT, SURF, and ORB feature descriptors across diverse image conditions. Part of COMP338.</div>
-        <div class="project-tech">
-          <span class="tech-tag">Python</span>
-          <span class="tech-tag">OpenCV</span>
-          <span class="tech-tag">PyTorch</span>
-          <span class="tech-tag">NumPy</span>
-        </div>
-      </div>
-
-      <div class="project-card">
-        <div class="project-header">
-          <div class="project-icon">💬</div>
-          <div class="project-status">Coursework</div>
-        </div>
-        <div class="project-title">OOP Messaging System</div>
-        <div class="project-desc">Multi-user messaging system demonstrating advanced OOP design patterns — Observer, Factory, Strategy. Clean architecture and extensibility focus for COMP319 Software Engineering II.</div>
-        <div class="project-tech">
-          <span class="tech-tag">Java</span>
-          <span class="tech-tag">OOP Patterns</span>
-          <span class="tech-tag">UML</span>
-        </div>
-      </div>
-
-      <div class="project-card">
-        <div class="project-header">
-          <div class="project-icon">📦</div>
-          <div class="project-status">Group Project</div>
-        </div>
-        <div class="project-title">SmartDropoff — iOS Delivery App</div>
-        <div class="project-desc">Group mobile app for delivery drivers that optimises routes to complete more deliveries in less time, cutting fuel costs and improving efficiency. Built with Swift for iOS. Team of 5 including Robert Szuba, James Alexander, Jake Rooney, George Wales.</div>
-        <div class="project-tech">
-          <span class="tech-tag">Swift</span>
-          <span class="tech-tag">iOS</span>
-          <span class="tech-tag">Route Optimisation</span>
-          <span class="tech-tag">Mobile Dev</span>
-        </div>
-      </div>
-        <div class="project-desc">Cloud computing projects from COMP315 covering deployment pipelines, scalable architecture design, containerisation, and cloud-native application design on AWS.</div>
-        <div class="project-tech">
-          <span class="tech-tag">AWS</span>
-          <span class="tech-tag">Docker</span>
-          <span class="tech-tag">CI/CD</span>
-          <span class="tech-tag">SQL</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Project Previews -->
-  <section id="preview" class="reveal">
-    <div class="section-label">// 04 — Preview</div>
-    <h2>Project Deep Dive</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:32px;margin-top:-24px;">Click any project to see a full breakdown — architecture, features, and tech stack.</p>
-    <div class="preview-grid">
-
-      <!-- Preview 1 -->
-      <div class="preview-card" onclick="openModal('modal1')">
-        <div class="preview-thumb">
-          <div class="thumb-bg" style="background-image: linear-gradient(rgba(124,58,237,0.4) 1px, transparent 1px), linear-gradient(90deg,rgba(124,58,237,0.4) 1px,transparent 1px);"></div>
-          <div class="thumb-emoji">🛡️</div>
-          <div class="preview-hover-overlay">▶ Open Preview</div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-meta">
-            <span class="preview-category">Dissertation · AI Safety</span>
-            <span class="preview-year">2025–26</span>
-          </div>
-          <div class="preview-title">Adversarial AI Competition Platform</div>
-          <div class="preview-blurb">Automated platform for evaluating adversarial ML attacks and defenses. Real-time leaderboards, Docker-sandboxed execution, and PyTorch model evaluation.</div>
-          <div class="preview-tags">
-            <span class="tech-tag">Python</span>
-            <span class="tech-tag">PyTorch</span>
-            <span class="tech-tag">Flask</span>
-            <span class="tech-tag">React</span>
-            <span class="tech-tag">SQL</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview 2 -->
-      <div class="preview-card" onclick="openModal('modal2')">
-        <div class="preview-thumb">
-          <div class="thumb-bg" style="background-image: linear-gradient(rgba(0,212,255,0.3) 1px, transparent 1px), linear-gradient(90deg,rgba(0,212,255,0.3) 1px,transparent 1px);"></div>
-          <div class="thumb-emoji">👁️</div>
-          <div class="preview-hover-overlay">▶ Open Preview</div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-meta">
-            <span class="preview-category">Computer Vision · ML</span>
-            <span class="preview-year">2025</span>
-          </div>
-          <div class="preview-title">Feature Extraction & Edge Detection (COMP338)</div>
-          <div class="preview-blurb">Built Canny edge detection from scratch and benchmarked SIFT, SURF, ORB. Deep dive into low-level vision algorithms and performance analysis.</div>
-          <div class="preview-tags">
-            <span class="tech-tag">Python</span>
-            <span class="tech-tag">OpenCV</span>
-            <span class="tech-tag">NumPy</span>
-            <span class="tech-tag">PyTorch</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview 3 -->
-      <div class="preview-card" onclick="openModal('modal3')">
-        <div class="preview-thumb">
-          <div class="thumb-bg" style="background-image: linear-gradient(rgba(0,229,160,0.25) 1px, transparent 1px), linear-gradient(90deg,rgba(0,229,160,0.25) 1px,transparent 1px);"></div>
-          <div class="thumb-emoji">💬</div>
-          <div class="preview-hover-overlay">▶ Open Preview</div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-meta">
-            <span class="preview-category">Software Engineering · OOP</span>
-            <span class="preview-year">2025</span>
-          </div>
-          <div class="preview-title">OOP Messaging System (COMP319)</div>
-          <div class="preview-blurb">Multi-user messaging platform built around Observer, Factory, and Strategy design patterns. Focus on extensible, maintainable architecture.</div>
-          <div class="preview-tags">
-            <span class="tech-tag">Java</span>
-            <span class="tech-tag">OOP Patterns</span>
-            <span class="tech-tag">UML</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview 4 -->
-      <div class="preview-card" onclick="openModal('modal4')">
-        <div class="preview-thumb">
-          <div class="thumb-bg" style="background-image: linear-gradient(rgba(251,191,36,0.2) 1px, transparent 1px), linear-gradient(90deg,rgba(251,191,36,0.2) 1px,transparent 1px);"></div>
-          <div class="thumb-emoji">☁️</div>
-          <div class="preview-hover-overlay">▶ Open Preview</div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-meta">
-            <span class="preview-category">Cloud · DevOps</span>
-            <span class="preview-year">2026</span>
-          </div>
-          <div class="preview-title">Cloud Infrastructure & Architecture (COMP315)</div>
-          <div class="preview-blurb">Scalable cloud-native application design on AWS. Containerisation with Docker, CI/CD pipelines, IaC, and cloud service model exploration.</div>
-          <div class="preview-tags">
-            <span class="tech-tag">AWS</span>
-            <span class="tech-tag">Docker</span>
-            <span class="tech-tag">CI/CD</span>
-            <span class="tech-tag">SQL</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview 5 -->
-      <div class="preview-card" onclick="openModal('modal5')">
-        <div class="preview-thumb">
-          <div class="thumb-bg" style="background-image: linear-gradient(rgba(251,113,133,0.25) 1px, transparent 1px), linear-gradient(90deg,rgba(251,113,133,0.25) 1px,transparent 1px);"></div>
-          <div class="thumb-emoji">📦</div>
-          <div class="preview-hover-overlay">▶ Open Preview</div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-meta">
-            <span class="preview-category">iOS · Group Project</span>
-            <span class="preview-year">2025</span>
-          </div>
-          <div class="preview-title">SmartDropoff — iOS Delivery Optimisation App</div>
-          <div class="preview-blurb">Mobile app helping delivery drivers complete more deliveries in less time with smart route optimisation. Built as a team of 5 using Swift for iOS.</div>
-          <div class="preview-tags">
-            <span class="tech-tag">Swift</span>
-            <span class="tech-tag">iOS</span>
-            <span class="tech-tag">Route Optimisation</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-  <!-- Modal 1 -->
-  <div class="modal-overlay" id="modal1" onclick="closeModalOutside(event, 'modal1')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-icon">🛡️</div>
-        <button class="modal-close" onclick="closeModal('modal1')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-status-row">
-          <span class="modal-badge badge-status">Honours Dissertation</span>
-          <span class="modal-badge badge-year">2025 – 2026</span>
-        </div>
-        <div class="modal-title">Adversarial AI Competition Platform</div>
-        <div class="modal-section">
-          <div class="modal-section-label">Overview</div>
-          <p>An end-to-end web platform that automates the evaluation of adversarial machine learning attack and defense algorithms. Built as a final-year Honours dissertation under Dr. Xiaowei Huang, the platform replaces a manual marking process for COMP329 Advanced AI students.</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Key Features</div>
-          <ul class="modal-features">
-            <li>Students upload Python attack scripts and PyTorch (.pt) defense models via a secure web interface</li>
-            <li>Sandboxed Docker containers execute each submission against 10 baseline attacks and 10 baseline defenses</li>
-            <li>Automated scoring engine returns accuracy metrics and adversarial robustness scores instantly</li>
-            <li>Live leaderboard ranks submissions across the cohort in real-time</li>
-            <li>JWT-secured authentication with role-based access for students vs. administrators</li>
-            <li>PostgreSQL database stores submissions, scores, and evaluation history with full SQL querying</li>
-          </ul>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Architecture</div>
-          <p>React frontend → Flask REST API backend → Docker evaluation pipeline → PostgreSQL database. Supervisor: Dr. Xiaowei Huang. Based on COMP329 coursework from the AISafetyLectureNotes textbook.</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Tech Stack</div>
-          <div class="modal-tech-row">
-            <span class="tech-tag">Python</span><span class="tech-tag">PyTorch</span><span class="tech-tag">Flask</span><span class="tech-tag">React</span><span class="tech-tag">Docker</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">SQL</span><span class="tech-tag">JWT</span><span class="tech-tag">Machine Learning</span><span class="tech-tag">AI Safety</span>
-          </div>
-        </div>
-      </div>
+    <div class="section-label" data-i18n="products">Products</div>
+    <div class="prod-grid" id="home-grid"></div>
+    <div class="empty-note" id="home-empty" style="display:none">
+      <span class="big-ico">📦</span>
+      <span data-i18n="noProducts">No products yet. Open Manage to add your first product.</span>
     </div>
   </div>
-
-  <!-- Modal 2 -->
-  <div class="modal-overlay" id="modal2" onclick="closeModalOutside(event, 'modal2')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-icon">👁️</div>
-        <button class="modal-close" onclick="closeModal('modal2')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-status-row">
-          <span class="modal-badge badge-status">COMP338 Coursework</span>
-          <span class="modal-badge badge-year">2025</span>
-        </div>
-        <div class="modal-title">Computer Vision: Feature Extraction & Edge Detection</div>
-        <div class="modal-section">
-          <div class="modal-section-label">Overview</div>
-          <p>A deep technical investigation into low-level computer vision algorithms. Implemented Canny edge detection from scratch in Python, then conducted a rigorous comparative analysis of three major feature descriptor algorithms across varied image datasets.</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Key Features</div>
-          <ul class="modal-features">
-            <li>Full Canny edge detection pipeline implemented from scratch — Gaussian smoothing, gradient calculation, non-maximum suppression, hysteresis thresholding</li>
-            <li>Comparative benchmark of SIFT, SURF, and ORB feature descriptors across multiple image categories</li>
-            <li>Performance analysis under varying lighting, scale, rotation, and noise conditions</li>
-            <li>Visualisation suite built with Matplotlib showing keypoint distributions and match quality</li>
-            <li>Statistical evaluation metrics including precision, recall, and match repeatability</li>
-          </ul>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Tech Stack</div>
-          <div class="modal-tech-row">
-            <span class="tech-tag">Python</span><span class="tech-tag">OpenCV</span><span class="tech-tag">NumPy</span><span class="tech-tag">PyTorch</span><span class="tech-tag">Matplotlib</span><span class="tech-tag">Computer Vision</span><span class="tech-tag">Machine Learning</span>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="bottom-nav">
+    <button class="on" id="nav-home" onclick="showScreen('home')"><span class="ico">🏠</span><span data-i18n="navHome">Home</span></button>
+    <button id="nav-admin" onclick="showScreen('admin')"><span class="ico">⚙️</span><span data-i18n="navManage">Manage</span></button>
   </div>
-
-  <!-- Modal 3 -->
-  <div class="modal-overlay" id="modal3" onclick="closeModalOutside(event, 'modal3')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-icon">💬</div>
-        <button class="modal-close" onclick="closeModal('modal3')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-status-row">
-          <span class="modal-badge badge-status">COMP319 Coursework</span>
-          <span class="modal-badge badge-year">2025</span>
-        </div>
-        <div class="modal-title">OOP Messaging System</div>
-        <div class="modal-section">
-          <div class="modal-section-label">Overview</div>
-          <p>A multi-user messaging platform built to demonstrate mastery of object-oriented design principles and software engineering best practices. Built for COMP319 Software Engineering II.</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Key Features</div>
-          <ul class="modal-features">
-            <li>Observer pattern for real-time message notifications between users</li>
-            <li>Factory pattern for flexible creation of different message types</li>
-            <li>Strategy pattern enabling pluggable message delivery and formatting algorithms</li>
-            <li>UML class diagrams and sequence diagrams documenting full system architecture</li>
-            <li>Extensible design allowing new features without modifying existing code (Open/Closed principle)</li>
-          </ul>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Tech Stack</div>
-          <div class="modal-tech-row">
-            <span class="tech-tag">Java</span><span class="tech-tag">OOP Patterns</span><span class="tech-tag">UML</span><span class="tech-tag">Software Engineering</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal 4 -->
-  <div class="modal-overlay" id="modal4" onclick="closeModalOutside(event, 'modal4')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-icon">☁️</div>
-        <button class="modal-close" onclick="closeModal('modal4')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-status-row">
-          <span class="modal-badge badge-status">COMP315 Module</span>
-          <span class="modal-badge badge-year">2026</span>
-        </div>
-        <div class="modal-title">Cloud Infrastructure & Architecture</div>
-        <div class="modal-section">
-          <div class="modal-section-label">Overview</div>
-          <p>Cloud computing projects from COMP315 building practical expertise in cloud-native application design, scalable infrastructure, and DevOps automation on AWS.</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Key Features</div>
-          <ul class="modal-features">
-            <li>Containerised application deployment with Docker and orchestration concepts</li>
-            <li>CI/CD pipeline configuration for automated testing and deployment</li>
-            <li>Infrastructure as Code (IaC) for reproducible environment provisioning</li>
-            <li>AWS services including EC2, S3, and cloud storage with SQL database integration</li>
-            <li>Scalable architecture design patterns: load balancing, auto-scaling, microservices</li>
-          </ul>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Tech Stack</div>
-          <div class="modal-tech-row">
-            <span class="tech-tag">AWS</span><span class="tech-tag">Docker</span><span class="tech-tag">CI/CD</span><span class="tech-tag">SQL</span><span class="tech-tag">Python</span><span class="tech-tag">IaC</span><span class="tech-tag">Cloud Architecture</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Education -->
-  <section id="education" class="reveal">
-    <div class="section-label">// 05 — Education</div>
-    <h2>Academic Background</h2>
-    <div class="timeline">
-
-      <div class="tl-item">
-        <div class="tl-date">2021 – Present (Expected 2025)</div>
-        <div class="tl-title">BSc (Honours) Computer Science with Artificial Intelligence</div>
-        <div class="tl-org">University of Liverpool &nbsp;·&nbsp; <span style="color:var(--green)">Targeting First Class</span></div>
-        <div class="tl-body">
-          Pursuing a First Class Honours degree with a specialisation in Artificial Intelligence. Final-year dissertation: <em>Online Deep Learning Algorithm Competition Website</em> — an automated adversarial AI evaluation platform supervised by Dr. Xiaowei Huang.<br><br>
-          Key modules: COMP338 Computer Vision · COMP315 Cloud Computing · COMP329 Advanced AI · COMP337 Data Mining &amp; Visualisation · COMP319 Software Engineering II · COMP305 Biocomputation
-        </div>
-      </div>
-
-      <div class="tl-item">
-        <div class="tl-date">Sep 2020 – Jun 2022</div>
-        <div class="tl-title">A Levels</div>
-        <div class="tl-org">Loreto College Hulme, Manchester</div>
-        <div class="tl-body">
-          <strong style="color:var(--text)">A Level Computer Science</strong> &nbsp;·&nbsp; <strong style="color:var(--text)">A Level Mathematics</strong> &nbsp;·&nbsp; <strong style="color:var(--text)">BTEC Level 3 Business (C-Tech)</strong> — <span style="color:var(--green)">Distinction</span>
-        </div>
-      </div>
-
-      <div class="tl-item">
-        <div class="tl-date">– 2020</div>
-        <div class="tl-title">GCSEs</div>
-        <div class="tl-org">Cedar Mount Academy, Manchester</div>
-        <div class="tl-body">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
-            <span style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.18);color:#9aaab8;padding:4px 10px;border-radius:6px;font-size:12px;">English Language &amp; Literature</span>
-            <span style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;">Mathematics — Grade 8</span>
-            <span style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;">Physics — Grade 8</span>
-            <span style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;">Chemistry — Grade 8</span>
-            <span style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;">Biology — Grade 6</span>
-            <span style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;">Computer Science — Grade 6 &amp; 7</span>
-            <span style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);padding:4px 10px;border-radius:6px;font-size:12px;">IT Creative Media — Grade 6</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Experience -->
-  <section id="experience" class="reveal">
-    <div class="section-label">// 06 — Experience</div>
-    <h2>Professional Experience</h2>
-    <div class="timeline">
-      <div class="tl-item">
-        <div class="tl-date">Ongoing</div>
-        <div class="tl-title">Company Director</div>
-        <div class="tl-org">Private Company</div>
-        <div class="tl-body">
-          Directing company operations while concurrently completing Honours degree. Responsibilities include financial management and billing, leadership and team coordination, strategic decision-making, and multitasking across operational domains. Demonstrates ability to manage high-stakes responsibilities alongside demanding academic workload.
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-date">Ongoing</div>
-        <div class="tl-title">Supervised Trading Mentorship</div>
-        <div class="tl-org">Forex / XAUUSD — $6,400 Account</div>
-        <div class="tl-body">
-          Two-month structured mentorship programme focused on XAUUSD trading with strict 0.5% risk management rules per trade. Developing analytical discipline, data-driven decision-making, and emotional control under financial pressure — skills directly transferable to engineering and product roles.
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Modal 5 -->
-  <div class="modal-overlay" id="modal5" onclick="closeModalOutside(event, 'modal5')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-icon">📦</div>
-        <button class="modal-close" onclick="closeModal('modal5')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-status-row">
-          <span class="modal-badge badge-status">Group Project</span>
-          <span class="modal-badge badge-year">2025</span>
-        </div>
-        <div class="modal-title">SmartDropoff — iOS Delivery Optimisation App</div>
-        <div class="modal-section">
-          <div class="modal-section-label">Overview</div>
-          <p>SmartDropoff is a mobile application designed to help delivery drivers optimise their routes, enabling them to complete more deliveries in a shorter time frame. By reducing unnecessary driving and avoiding traffic, the app saves fuel and significantly improves operational efficiency.</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Key Features</div>
-          <ul class="modal-features">
-            <li>Smart route optimisation engine to sequence deliveries for minimum travel time and fuel usage</li>
-            <li>Mobile-first iOS design built natively in Swift for a smooth, responsive user experience</li>
-            <li>Delivery tracking and management system for drivers to view and update drop-off status</li>
-            <li>System architecture and detailed design documented across the full team</li>
-            <li>Collaborative group project demonstrating teamwork, agile planning, and software design skills</li>
-          </ul>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Team</div>
-          <p>Robert Szuba · James Alexander · Jake Rooney · Tawrat Rustamkhel · George Wales</p>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-label">Tech Stack</div>
-          <div class="modal-tech-row">
-            <span class="tech-tag">Swift</span><span class="tech-tag">iOS</span><span class="tech-tag">Route Optimisation</span><span class="tech-tag">Mobile Development</span><span class="tech-tag">Agile</span><span class="tech-tag">System Design</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Boost / LeetCode / Extras -->
-  <section id="boost" class="reveal">
-    <div class="section-label">// 07 — Extras & Achievements</div>
-    <h2>Boosting My Profile</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:32px;margin-top:-24px;">Actively working on these to strengthen my CV beyond the degree — certifications, competitive coding, and open source.</p>
-
-    <!-- LeetCode tracker -->
-    <div style="background:linear-gradient(135deg,rgba(251,191,36,0.07),rgba(124,58,237,0.05));border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:24px;margin-bottom:32px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <span style="font-size:24px;">⚡</span>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;">LeetCode — Algorithm Practice</div>
-          <div style="font-size:12px;color:var(--muted);">Practising daily to sharpen problem-solving for technical interviews</div>
-        </div>
-        <a href="https://leetcode.com" target="_blank" style="margin-left:auto;font-size:11px;color:var(--accent);text-decoration:none;border:1px solid rgba(0,212,255,0.2);padding:4px 10px;border-radius:6px;">leetcode.com →</a>
-      </div>
-      <div class="lc-row">
-        <div class="lc-stat">
-          <div class="lc-num lc-easy">—</div>
-          <div class="lc-label">Easy Solved</div>
-        </div>
-        <div class="lc-stat">
-          <div class="lc-num lc-med">—</div>
-          <div class="lc-label">Medium Solved</div>
-        </div>
-        <div class="lc-stat">
-          <div class="lc-num lc-hard">—</div>
-          <div class="lc-label">Hard Solved</div>
-        </div>
-      </div>
-      <div style="font-size:12px;color:#556677;text-align:center;">Update these numbers as you solve problems — aim for 50 Easy, 30 Medium before applying</div>
-    </div>
-
-    <div class="boost-divider">
-      <div class="boost-divider-line"></div>
-      <div class="boost-divider-text">Free Certifications — Add these to LinkedIn</div>
-      <div class="boost-divider-line"></div>
-    </div>
-
-    <div class="boost-grid">
-      <a href="https://www.kaggle.com/learn" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">🏅</div>
-          <span class="boost-pill pill-free">Free</span>
-        </div>
-        <div class="boost-title">Kaggle Courses</div>
-        <div class="boost-desc">Intro to ML, Pandas, Deep Learning, Computer Vision, NLP — each takes 4–8 hours and gives a certificate. Directly relevant to your AI degree.</div>
-        <div class="boost-link">kaggle.com/learn →</div>
-      </a>
-
-      <a href="https://www.coursera.org/specializations/deep-learning" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">🧠</div>
-          <span class="boost-pill pill-cert">Recognised</span>
-        </div>
-        <div class="boost-title">DeepLearning.AI — Andrew Ng</div>
-        <div class="boost-desc">The most respected ML certification online. Deep Learning Specialisation (5 courses). Free to audit on Coursera. Employers know this one well.</div>
-        <div class="boost-link">coursera.org →</div>
-      </a>
-
-      <a href="https://aws.amazon.com/certification/certified-cloud-practitioner/" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">☁️</div>
-          <span class="boost-pill pill-cert">Industry Cert</span>
-        </div>
-        <div class="boost-title">AWS Cloud Practitioner</div>
-        <div class="boost-desc">Entry-level AWS cert that proves cloud knowledge from your COMP315 module. ~£85 exam, 2–3 weeks study. Massive boost for any cloud/DevOps role.</div>
-        <div class="boost-link">aws.amazon.com →</div>
-      </a>
-
-      <a href="https://www.hackerrank.com/skills-verification" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">🐍</div>
-          <span class="boost-pill pill-free">Free</span>
-        </div>
-        <div class="boost-title">HackerRank — Python & SQL</div>
-        <div class="boost-desc">Get verified badges for Python (5 stars), SQL, and Problem Solving. Badges display directly on LinkedIn and take just a few hours to earn.</div>
-        <div class="boost-link">hackerrank.com →</div>
-      </a>
-
-      <a href="https://github.com" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">⌥</div>
-          <span class="boost-pill pill-portfolio">Portfolio</span>
-        </div>
-        <div class="boost-title">GitHub — Push Your Projects</div>
-        <div class="boost-desc">Upload your dissertation code, COMP338 CV work, and any side projects with clean READMEs. A green commit graph is worth more than most certifications to tech employers.</div>
-        <div class="boost-link">github.com →</div>
-      </a>
-
-      <a href="https://www.linkedin.com/in/tawrat-rustam" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">🔗</div>
-          <span class="boost-pill pill-network">Network</span>
-        </div>
-        <div class="boost-title">LinkedIn — Optimise Profile</div>
-        <div class="boost-desc">Add all certs, set "Open to Work", connect with UoL alumni in AI/ML roles. Post about your dissertation progress — even 1–2 posts showing your work gets recruiter attention.</div>
-        <div class="boost-link">linkedin.com/in/tawrat-rustam →</div>
-      </a>
-
-      <a href="https://www.kaggle.com/competitions" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">🏆</div>
-          <span class="boost-pill pill-portfolio">Competition</span>
-        </div>
-        <div class="boost-title">Kaggle Competitions</div>
-        <div class="boost-desc">Enter beginner ML competitions. Even a top-50% ranking shows initiative. Your PyTorch and Computer Vision skills from COMP338 are directly applicable — especially image classification tasks.</div>
-        <div class="boost-link">kaggle.com/competitions →</div>
-      </a>
-
-      <a href="https://huggingface.co/learn" class="boost-card" target="_blank">
-        <div class="boost-header">
-          <div class="boost-icon">🤗</div>
-          <span class="boost-pill pill-free">Free</span>
-        </div>
-        <div class="boost-title">Hugging Face — NLP & Transformers</div>
-        <div class="boost-desc">Free course on Transformers, NLP, and modern AI. Hugging Face is the #1 platform for open-source AI models — knowing it is increasingly expected in AI/ML job descriptions.</div>
-        <div class="boost-link">huggingface.co/learn →</div>
-      </a>
-    </div>
-  </section>
-
-  <!-- Contact -->
-  <section id="contact" class="reveal">
-    <div class="section-label">// 08 — Contact</div>
-    <h2>Let's Connect</h2>
-    <div class="contact-grid">
-      <a href="https://www.linkedin.com/in/tawrat-rustam" class="contact-card" target="_blank">
-        <div class="contact-icon">in</div>
-        <div>
-          <div class="contact-label">LinkedIn</div>
-          <div class="contact-val">Tawrat Rustam</div>
-        </div>
-      </a>
-      <a href="https://github.com" class="contact-card" target="_blank">
-        <div class="contact-icon">⌥</div>
-        <div>
-          <div class="contact-label">GitHub</div>
-          <div class="contact-val">View my code</div>
-        </div>
-      </a>
-      <a href="/cdn-cgi/l/email-protection#2d594c5a5f4c595f585e594c406d4a404c4441034e4240" class="contact-card">
-        <div class="contact-icon">✉</div>
-        <div>
-          <div class="contact-label">Email</div>
-          <div class="contact-val"><span class="__cf_email__" data-cfemail="ccb8adbbbeadb8beb9bfb8ada18caba1ada5a0e2afa3a1">[email&#160;protected]</span></div>
-        </div>
-      </a>
-      <a href="#" class="contact-card">
-        <div class="contact-icon">📄</div>
-        <div>
-          <div class="contact-label">Student ID</div>
-          <div class="contact-val">201663450 — UoL</div>
-        </div>
-      </a>
-    </div>
-
-    <div class="cv-banner">
-      <h3>Want the full CV?</h3>
-      <p>Download a print-ready version or get in touch directly to discuss opportunities.</p>
-      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
-        <a href="/cdn-cgi/l/email-protection#e692879194879294939592878ba6818b878f8ac885898b" class="btn btn-primary">Email Me →</a>
-        <a href="#" onclick="window.print(); return false;" class="btn btn-outline">Print / Save as PDF</a>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <p>© 2025 Tawrat Rustam · Computer Science with AI Honours — University of Liverpool</p>
-  </footer>
 </div>
 
+<!-- ================= SCANNER ================= -->
+<div class="screen" id="screen-scan">
+  <div class="scan-view">
+    <video id="scan-video" playsinline muted></video>
+    <div class="scan-frame"></div>
+    <div class="scan-hint" data-i18n="scanHint">Point camera at the barcode</div>
+    <button class="scan-close" onclick="stopScan(); showScreen(scanReturnTo)">✕</button>
+    <div class="scan-err" id="scan-err">
+      <span style="font-size:48px">🚫📷</span>
+      <div data-i18n="camError" style="font-size:17px; line-height:1.5">Camera not available. You can type the barcode number instead.</div>
+      <button class="primary-btn" style="max-width:280px" onclick="stopScan(); showScreen('keypad')" data-i18n="typeBarcode">Type barcode number</button>
+    </div>
+    <div class="scan-bottom">
+      <button class="ghost-btn" onclick="stopScan(); showScreen('keypad')">🔢 <span data-i18n="typeBarcode">Type barcode number</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= KEYPAD ================= -->
+<div class="screen" id="screen-keypad">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('home')">‹</button>
+    <h1 data-i18n="typeBarcode">Type barcode number</h1>
+  </div>
+  <div class="keypad-wrap">
+    <div class="keypad-display" id="keypad-display"><span class="ph" data-i18n="keypadPh">Enter number…</span></div>
+    <div class="keypad" id="keypad"></div>
+  </div>
+</div>
+
+<!-- ================= PRODUCT DETAIL ================= -->
+<div class="screen" id="screen-detail">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('home')">‹</button>
+    <h1 data-i18n="productInfo">Product</h1>
+    <button class="icon-btn" onclick="editProduct(currentProductId)">✏️</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<!-- ================= NOT FOUND ================= -->
+<div class="screen" id="screen-notfound">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('home')">‹</button>
+    <h1 data-i18n="notFoundTitle">Not found</h1>
+  </div>
+  <div class="form-body" style="justify-content:center; text-align:center; gap:20px">
+    <span style="font-size:64px">❓📦</span>
+    <div style="font-size:18px; line-height:1.5">
+      <span data-i18n="notFoundMsg">This barcode is not in the system:</span><br>
+      <b id="notfound-code" style="font-size:22px; letter-spacing:2px"></b>
+    </div>
+    <button class="primary-btn" onclick="addProductWithBarcode()" >➕ <span data-i18n="addThis">Add this product</span></button>
+    <button class="ghost-btn" onclick="startScan('lookup')">📷 <span data-i18n="scanAgain">Scan again</span></button>
+  </div>
+</div>
+
+<!-- ================= ADMIN LIST ================= -->
+<div class="screen" id="screen-admin">
+  <div class="topbar">
+    <h1 data-i18n="manage">Manage</h1>
+    <button class="icon-btn" onclick="openWhManager()">🏭 <span data-i18n="warehouses">Warehouses</span></button>
+  </div>
+  <div class="admin-body">
+    <div class="lang-row" id="lang-row"></div>
+    <button class="primary-btn" onclick="newProduct()">➕ <span data-i18n="addProduct">Add product</span></button>
+    <div class="section-label"><span data-i18n="products">Products</span> (<span id="admin-count">0</span>)</div>
+    <div id="admin-list" style="display:flex; flex-direction:column; gap:10px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button id="nav-home2" onclick="showScreen('home')"><span class="ico">🏠</span><span data-i18n="navHome">Home</span></button>
+    <button class="on" onclick="showScreen('admin')"><span class="ico">⚙️</span><span data-i18n="navManage">Manage</span></button>
+  </div>
+</div>
+
+<!-- ================= PRODUCT FORM ================= -->
+<div class="screen" id="screen-form">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('admin')">‹</button>
+    <h1 id="form-title" data-i18n="addProduct">Add product</h1>
+  </div>
+  <div class="form-body">
+    <button class="photo-pick" id="photo-pick" onclick="document.getElementById('photo-input').click()">
+      <img id="photo-preview" style="display:none">
+      <span class="big-ico">📸</span>
+      <span data-i18n="takePhoto">Take a photo</span>
+    </button>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="onPhotoPicked(event)">
+
+    <div class="field">
+      <label data-i18n="barcode">Barcode</label>
+      <div class="barcode-field">
+        <input id="form-barcode" inputmode="numeric" placeholder="0123456789">
+        <button onclick="startScan('form')">📷</button>
+      </div>
+    </div>
+    <div class="field">
+      <label data-i18n="prodName">Product name</label>
+      <input id="form-name" placeholder="">
+    </div>
+
+    <div class="section-label" data-i18n="priceStockPerWh">Price & stock per warehouse</div>
+    <div id="form-wh-list" style="display:flex; flex-direction:column; gap:10px"></div>
+
+    <button class="primary-btn" onclick="saveProduct()">💾 <span data-i18n="save">Save</span></button>
+    <button class="danger-btn" id="form-delete" style="display:none" onclick="deleteProduct()">🗑 <span data-i18n="delete">Delete product</span></button>
+  </div>
+</div>
+
+<!-- ================= WAREHOUSE PICKER SHEET ================= -->
+<div class="sheet-backdrop" id="wh-picker" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sheet">
+    <h2 data-i18n="chooseWh">Choose warehouse</h2>
+    <div id="wh-picker-list" style="display:flex; flex-direction:column; gap:10px"></div>
+  </div>
+</div>
+
+<!-- ================= WAREHOUSE MANAGER SHEET ================= -->
+<div class="sheet-backdrop" id="wh-manager" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sheet">
+    <h2 data-i18n="warehouses">Warehouses</h2>
+    <div id="wh-manager-list" style="display:flex; flex-direction:column; gap:10px"></div>
+    <div class="search-row" style="margin-top:6px">
+      <input id="new-wh-name" data-i18n-ph="newWhPh" placeholder="New warehouse name…">
+      <button onclick="addWarehouse()" style="background:var(--green); color:#04301f; border:none">➕</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script>
-  // Scroll reveal
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.08 });
-  reveals.forEach(r => observer.observe(r));
+/* =========================================================
+   Price Scanner — offline-first barcode lookup for small shops
+   Data lives in localStorage on the device.
+   ========================================================= */
 
-  // Proficiency bars — animate when in view
-  const barObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.querySelectorAll('.prof-bar-fill').forEach(bar => {
-          bar.style.width = bar.dataset.width + '%';
+// ---------- i18n ----------
+const I18N = {
+  en: {
+    appTitle: 'Price Scanner', scanBtn: 'SCAN BARCODE', searchPh: 'Search product…',
+    typeBarcode: 'Type barcode number', products: 'Products',
+    noProducts: 'No products yet. Open Manage to add your first product.',
+    navHome: 'Home', navManage: 'Manage', scanHint: 'Point camera at the barcode',
+    camError: 'Camera not available. You can type the barcode number instead.',
+    keypadPh: 'Enter number…', productInfo: 'Product', notFoundTitle: 'Not found',
+    notFoundMsg: 'This barcode is not in the system:', addThis: 'Add this product',
+    scanAgain: 'Scan again', manage: 'Manage', warehouses: 'Warehouses',
+    addProduct: 'Add product', editProduct: 'Edit product', takePhoto: 'Take a photo',
+    barcode: 'Barcode', prodName: 'Product name', priceStockPerWh: 'Price & stock per warehouse',
+    save: 'Save', delete: 'Delete product', chooseWh: 'Choose warehouse',
+    newWhPh: 'New warehouse name…', inStock: 'IN STOCK', lowStock: 'LOW', outStock: 'OUT OF STOCK',
+    noPrice: 'Not sold here', otherWh: 'Other warehouses', price: 'Price', stock: 'Stock',
+    saved: 'Saved ✔', needName: 'Please add a name or photo', needBarcode: 'Please add a barcode',
+    dupBarcode: 'This barcode already exists', confirmDelete: 'Delete this product?',
+    confirmDeleteWh: 'Delete this warehouse?', needOneWh: 'You need at least 1 warehouse',
+    availableHere: 'available'
+  },
+  es: {
+    appTitle: 'Escáner de Precios', scanBtn: 'ESCANEAR CÓDIGO', searchPh: 'Buscar producto…',
+    typeBarcode: 'Escribir número de código', products: 'Productos',
+    noProducts: 'Sin productos todavía. Abra Administrar para agregar el primero.',
+    navHome: 'Inicio', navManage: 'Administrar', scanHint: 'Apunte la cámara al código de barras',
+    camError: 'Cámara no disponible. Puede escribir el número del código.',
+    keypadPh: 'Escriba el número…', productInfo: 'Producto', notFoundTitle: 'No encontrado',
+    notFoundMsg: 'Este código no está en el sistema:', addThis: 'Agregar este producto',
+    scanAgain: 'Escanear de nuevo', manage: 'Administrar', warehouses: 'Almacenes',
+    addProduct: 'Agregar producto', editProduct: 'Editar producto', takePhoto: 'Tomar una foto',
+    barcode: 'Código de barras', prodName: 'Nombre del producto', priceStockPerWh: 'Precio y stock por almacén',
+    save: 'Guardar', delete: 'Eliminar producto', chooseWh: 'Elegir almacén',
+    newWhPh: 'Nombre del nuevo almacén…', inStock: 'HAY STOCK', lowStock: 'POCO', outStock: 'AGOTADO',
+    noPrice: 'No se vende aquí', otherWh: 'Otros almacenes', price: 'Precio', stock: 'Stock',
+    saved: 'Guardado ✔', needName: 'Agregue un nombre o una foto', needBarcode: 'Agregue un código de barras',
+    dupBarcode: 'Este código ya existe', confirmDelete: '¿Eliminar este producto?',
+    confirmDeleteWh: '¿Eliminar este almacén?', needOneWh: 'Necesita al menos 1 almacén',
+    availableHere: 'disponible'
+  },
+  ar: {
+    appTitle: 'ماسح الأسعار', scanBtn: 'امسح الباركود', searchPh: 'ابحث عن منتج…',
+    typeBarcode: 'اكتب رقم الباركود', products: 'المنتجات',
+    noProducts: 'لا توجد منتجات بعد. افتح "إدارة" لإضافة أول منتج.',
+    navHome: 'الرئيسية', navManage: 'إدارة', scanHint: 'وجّه الكاميرا نحو الباركود',
+    camError: 'الكاميرا غير متاحة. يمكنك كتابة رقم الباركود.',
+    keypadPh: 'أدخل الرقم…', productInfo: 'المنتج', notFoundTitle: 'غير موجود',
+    notFoundMsg: 'هذا الباركود غير موجود في النظام:', addThis: 'أضف هذا المنتج',
+    scanAgain: 'امسح مرة أخرى', manage: 'إدارة', warehouses: 'المستودعات',
+    addProduct: 'إضافة منتج', editProduct: 'تعديل المنتج', takePhoto: 'التقط صورة',
+    barcode: 'الباركود', prodName: 'اسم المنتج', priceStockPerWh: 'السعر والمخزون لكل مستودع',
+    save: 'حفظ', delete: 'حذف المنتج', chooseWh: 'اختر المستودع',
+    newWhPh: 'اسم المستودع الجديد…', inStock: 'متوفر', lowStock: 'قليل', outStock: 'نفد المخزون',
+    noPrice: 'لا يباع هنا', otherWh: 'مستودعات أخرى', price: 'السعر', stock: 'المخزون',
+    saved: 'تم الحفظ ✔', needName: 'أضف اسمًا أو صورة', needBarcode: 'أضف باركود',
+    dupBarcode: 'هذا الباركود موجود مسبقًا', confirmDelete: 'حذف هذا المنتج؟',
+    confirmDeleteWh: 'حذف هذا المستودع؟', needOneWh: 'تحتاج إلى مستودع واحد على الأقل',
+    availableHere: 'متوفر'
+  }
+};
+const LANG_NAMES = { en: 'English', es: 'Español', ar: 'العربية' };
+
+let lang = localStorage.getItem('ps_lang') || 'en';
+function t(key) { return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; }
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  renderLangRow();
+}
+function setLang(l) { lang = l; localStorage.setItem('ps_lang', l); applyLang(); renderAll(); }
+function renderLangRow() {
+  const row = document.getElementById('lang-row');
+  row.innerHTML = '';
+  for (const code of Object.keys(I18N)) {
+    const b = document.createElement('button');
+    b.textContent = LANG_NAMES[code];
+    if (code === lang) b.classList.add('on');
+    b.onclick = () => setLang(code);
+    row.appendChild(b);
+  }
+}
+
+// ---------- Data ----------
+const WH_COLORS = ['#00d4ff', '#ffc24b', '#ff7ac8', '#7cff6b', '#b28bff', '#ff9f5c'];
+let warehouses = [];
+let products = [];
+let currentWhId = null;
+let currentProductId = null;
+let editingProductId = null;
+let formPhoto = null;
+let lastUnknownBarcode = '';
+let scanReturnTo = 'home';
+
+function load() {
+  try { warehouses = JSON.parse(localStorage.getItem('ps_warehouses')) || []; } catch (e) { warehouses = []; }
+  try { products = JSON.parse(localStorage.getItem('ps_products')) || []; } catch (e) { products = []; }
+  currentWhId = localStorage.getItem('ps_current_wh');
+  if (!warehouses.length) seedDemo();
+  if (!warehouses.find(w => w.id === currentWhId)) currentWhId = warehouses[0].id;
+}
+function persist() {
+  localStorage.setItem('ps_warehouses', JSON.stringify(warehouses));
+  localStorage.setItem('ps_products', JSON.stringify(products));
+  localStorage.setItem('ps_current_wh', currentWhId);
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+function demoImg(emoji, bg) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 400;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 400, 400);
+  g.addColorStop(0, bg); g.addColorStop(1, '#0e141b');
+  x.fillStyle = g; x.fillRect(0, 0, 400, 400);
+  x.font = '200px serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(emoji, 200, 215);
+  return c.toDataURL('image/jpeg', 0.8);
+}
+
+function seedDemo() {
+  const w1 = { id: uid(), name: 'Warehouse A', color: WH_COLORS[0] };
+  const w2 = { id: uid(), name: 'Warehouse B', color: WH_COLORS[1] };
+  warehouses = [w1, w2];
+  products = [
+    { id: uid(), barcode: '012345678905', name: 'Rice 5kg', photo: demoImg('🍚', '#3d6b52'),
+      wh: { [w1.id]: { price: 12.99, stock: 40 }, [w2.id]: { price: 12.50, stock: 0 } } },
+    { id: uid(), barcode: '036000291452', name: 'Cooking Oil 1L', photo: demoImg('🫒', '#6b5d3d'),
+      wh: { [w1.id]: { price: 6.49, stock: 3 }, [w2.id]: { price: 5.99, stock: 25 } } },
+    { id: uid(), barcode: '049000006346', name: 'Cola 12-pack', photo: demoImg('🥤', '#6b3d3d'),
+      wh: { [w1.id]: { price: 8.99, stock: 0 }, [w2.id]: { price: 9.25, stock: 60 } } }
+  ];
+  currentWhId = w1.id;
+  persist();
+}
+
+const money = n => '$' + Number(n).toFixed(2);
+const getWh = id => warehouses.find(w => w.id === id);
+function stockClass(s) { return s <= 0 ? 'stock-out' : (s <= 5 ? 'stock-low' : 'stock-ok'); }
+function stockLabel(s) { return s <= 0 ? t('outStock') : (s <= 5 ? t('lowStock') + ' · ' + s : t('inStock') + ' · ' + s); }
+
+// ---------- Screens ----------
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (name === 'home') renderHomeList();
+  if (name === 'admin') renderAdmin();
+  if (name === 'keypad') { keypadValue = ''; renderKeypadDisplay(); }
+  window.scrollTo(0, 0);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ---------- Home ----------
+function renderHomePill() {
+  const w = getWh(currentWhId);
+  document.getElementById('home-wh-name').textContent = w ? w.name : '—';
+  document.getElementById('home-wh-dot').style.background = w ? w.color : '#666';
+}
+
+function renderHomeList() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const grid = document.getElementById('home-grid');
+  const list = products.filter(p =>
+    !q || p.name.toLowerCase().includes(q) || p.barcode.includes(q)
+  );
+  grid.innerHTML = '';
+  document.getElementById('home-empty').style.display = products.length ? 'none' : 'block';
+  for (const p of list) {
+    const e = p.wh[currentWhId];
+    const card = document.createElement('button');
+    card.className = 'prod-card';
+    card.onclick = () => showProduct(p.id);
+    const priceHtml = (e && e.price != null)
+      ? `<div class="price">${money(e.price)}</div>
+         <span class="stock-chip ${stockClass(e.stock)}">${stockLabel(e.stock)}</span>`
+      : `<div class="price none">${t('noPrice')}</div>`;
+    card.innerHTML = `
+      <img class="thumb" src="${p.photo || ''}" alt="">
+      <div class="info">
+        <div class="name">${escapeHtml(p.name)}</div>
+        ${priceHtml}
+      </div>`;
+    grid.appendChild(card);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Warehouse picker ----------
+function openWhPicker() {
+  const list = document.getElementById('wh-picker-list');
+  list.innerHTML = '';
+  for (const w of warehouses) {
+    const b = document.createElement('button');
+    b.className = 'wh-row';
+    b.innerHTML = `<span class="dot" style="background:${w.color}"></span>
+      <span class="grow wname">${escapeHtml(w.name)}</span>
+      ${w.id === currentWhId ? '<span style="color:var(--green); font-size:20px">✔</span>' : ''}`;
+    b.onclick = () => {
+      currentWhId = w.id; persist();
+      document.getElementById('wh-picker').classList.remove('open');
+      renderHomePill(); renderHomeList();
+    };
+    list.appendChild(b);
+  }
+  document.getElementById('wh-picker').classList.add('open');
+}
+
+// ---------- Warehouse manager ----------
+function openWhManager() {
+  const list = document.getElementById('wh-manager-list');
+  list.innerHTML = '';
+  for (const w of warehouses) {
+    const row = document.createElement('div');
+    row.className = 'wh-row';
+    row.innerHTML = `<span class="dot" style="background:${w.color}"></span>`;
+    const input = document.createElement('input');
+    input.value = w.name;
+    input.style.cssText = 'flex:1; min-width:0; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:10px; font-size:16px; outline:none';
+    input.onchange = () => { w.name = input.value.trim() || w.name; persist(); renderHomePill(); };
+    const del = document.createElement('button');
+    del.textContent = '🗑';
+    del.style.cssText = 'background:none; border:none; font-size:20px; flex:none';
+    del.onclick = () => deleteWarehouse(w.id);
+    row.appendChild(input); row.appendChild(del);
+    list.appendChild(row);
+  }
+  document.getElementById('wh-manager').classList.add('open');
+}
+
+function addWarehouse() {
+  const input = document.getElementById('new-wh-name');
+  const name = input.value.trim();
+  if (!name) return;
+  warehouses.push({ id: uid(), name, color: WH_COLORS[warehouses.length % WH_COLORS.length] });
+  input.value = '';
+  persist(); openWhManager(); renderHomePill();
+}
+
+function deleteWarehouse(id) {
+  if (warehouses.length <= 1) { toast(t('needOneWh')); return; }
+  if (!confirm(t('confirmDeleteWh'))) return;
+  warehouses = warehouses.filter(w => w.id !== id);
+  for (const p of products) delete p.wh[id];
+  if (currentWhId === id) currentWhId = warehouses[0].id;
+  persist(); openWhManager(); renderHomePill(); renderHomeList();
+}
+
+// ---------- Keypad ----------
+let keypadValue = '';
+function buildKeypad() {
+  const pad = document.getElementById('keypad');
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','GO'];
+  pad.innerHTML = '';
+  for (const k of keys) {
+    const b = document.createElement('button');
+    b.textContent = k === 'GO' ? '✔' : k;
+    if (k === 'GO') b.className = 'go';
+    if (k === '⌫') b.className = 'del';
+    b.onclick = () => {
+      if (k === 'GO') { if (keypadValue) lookupBarcode(keypadValue); return; }
+      if (k === '⌫') keypadValue = keypadValue.slice(0, -1);
+      else if (keypadValue.length < 20) keypadValue += k;
+      renderKeypadDisplay();
+    };
+    pad.appendChild(b);
+  }
+}
+function renderKeypadDisplay() {
+  const d = document.getElementById('keypad-display');
+  d.innerHTML = keypadValue ? escapeHtml(keypadValue) : `<span class="ph">${t('keypadPh')}</span>`;
+}
+
+// ---------- Lookup ----------
+function lookupBarcode(code) {
+  code = String(code).trim();
+  const p = products.find(p => p.barcode === code);
+  if (p) { showProduct(p.id); }
+  else {
+    lastUnknownBarcode = code;
+    document.getElementById('notfound-code').textContent = code;
+    showScreen('notfound');
+  }
+}
+
+function showProduct(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  currentProductId = id;
+  const body = document.getElementById('detail-body');
+  const cur = getWh(currentWhId);
+  const e = p.wh[currentWhId];
+
+  let mainBox;
+  if (e && e.price != null) {
+    mainBox = `
+      <div class="price-box" style="border-color:${e.stock > 0 ? 'var(--green)' : 'var(--red)'}">
+        <span class="dot" style="background:${cur.color}"></span>
+        <div class="grow">
+          <div class="wh-name">${escapeHtml(cur.name)}</div>
+          <div class="amount ${e.stock > 0 ? '' : 'out'}">${money(e.price)}</div>
+          <span class="stock-chip ${stockClass(e.stock)}">${stockLabel(e.stock)}</span>
+        </div>
+      </div>`;
+  } else {
+    mainBox = `
+      <div class="price-box" style="border-color:var(--border)">
+        <span class="dot" style="background:${cur.color}"></span>
+        <div class="grow">
+          <div class="wh-name">${escapeHtml(cur.name)}</div>
+          <div class="amount out">${t('noPrice')}</div>
+        </div>
+      </div>`;
+  }
+
+  let others = '';
+  const otherRows = warehouses.filter(w => w.id !== currentWhId).map(w => {
+    const we = p.wh[w.id];
+    const priceHtml = (we && we.price != null)
+      ? `<div class="wprice">${money(we.price)}</div>
+         <span class="stock-chip ${stockClass(we.stock)}">${stockLabel(we.stock)}</span>`
+      : `<div class="wprice none">${t('noPrice')}</div>`;
+    return `
+      <button class="wh-row" onclick="switchWhAndShow('${w.id}')">
+        <span class="dot" style="background:${w.color}"></span>
+        <div class="grow"><div class="wname">${escapeHtml(w.name)}</div></div>
+        <div style="text-align:end">${priceHtml}</div>
+      </button>`;
+  }).join('');
+  if (otherRows) {
+    others = `<div class="section-label">${t('otherWh')}</div>
+              <div class="other-wh-list">${otherRows}</div>`;
+  }
+
+  body.innerHTML = `
+    <img class="detail-photo" src="${p.photo || ''}" alt="">
+    <div class="detail-info">
+      <div>
+        <div class="detail-name">${escapeHtml(p.name)}</div>
+        <div class="detail-barcode">▮▮▮ ${escapeHtml(p.barcode)}</div>
+      </div>
+      ${mainBox}
+      ${others}
+    </div>`;
+  showScreen('detail');
+}
+
+function switchWhAndShow(whId) {
+  currentWhId = whId; persist(); renderHomePill();
+  showProduct(currentProductId);
+}
+
+// ---------- Scanner ----------
+let scanStream = null;
+let scanActive = false;
+let zxingReader = null;
+let nativeDetector = null;
+
+async function startScan(mode) {
+  scanReturnTo = (mode === 'form') ? 'form' : 'home';
+  scanMode = mode;
+  document.getElementById('scan-err').style.display = 'none';
+  showScreen('scan');
+  const video = document.getElementById('scan-video');
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    video.srcObject = scanStream;
+    await video.play();
+    scanActive = true;
+    if ('BarcodeDetector' in window) {
+      try {
+        nativeDetector = nativeDetector || new BarcodeDetector({
+          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code']
         });
-        barObserver.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.3 });
-  const profGrid = document.getElementById('profGrid');
-  if (profGrid) barObserver.observe(profGrid);
-
-  // Modal open/close
-  function openModal(id) {
-    document.getElementById(id).classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeModal(id) {
-    document.getElementById(id).classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  function closeModalOutside(event, id) {
-    if (event.target.classList.contains('modal-overlay')) {
-      closeModal(id);
+        nativeLoop(video);
+        return;
+      } catch (e) { /* fall through to ZXing */ }
     }
+    zxingLoop(video);
+  } catch (err) {
+    document.getElementById('scan-err').style.display = 'flex';
   }
+}
 
-  // Close modal on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay.open').forEach(m => {
-        m.classList.remove('open');
-        document.body.style.overflow = '';
-      });
+let scanMode = 'lookup';
+
+async function nativeLoop(video) {
+  while (scanActive) {
+    try {
+      const codes = await nativeDetector.detect(video);
+      if (codes.length && codes[0].rawValue) { onScanResult(codes[0].rawValue); return; }
+    } catch (e) { /* frame not ready */ }
+    await new Promise(r => setTimeout(r, 180));
+  }
+}
+
+function zxingLoop(video) {
+  if (typeof ZXing === 'undefined') {
+    document.getElementById('scan-err').style.display = 'flex';
+    return;
+  }
+  zxingReader = zxingReader || new ZXing.BrowserMultiFormatReader();
+  zxingReader.decodeFromVideoElementContinuously(video, (result) => {
+    if (result && scanActive) onScanResult(result.getText());
+  }).catch(() => { document.getElementById('scan-err').style.display = 'flex'; });
+}
+
+function onScanResult(code) {
+  if (!scanActive) return;
+  stopScan();
+  if (navigator.vibrate) navigator.vibrate(80);
+  if (scanMode === 'form') {
+    document.getElementById('form-barcode').value = code;
+    showScreen('form');
+  } else {
+    lookupBarcode(code);
+  }
+}
+
+function stopScan() {
+  scanActive = false;
+  if (zxingReader) { try { zxingReader.stopContinuousDecode(); } catch (e) {} }
+  if (scanStream) {
+    scanStream.getTracks().forEach(tr => tr.stop());
+    scanStream = null;
+  }
+  const video = document.getElementById('scan-video');
+  video.srcObject = null;
+}
+
+// ---------- Admin ----------
+function renderAdmin() {
+  const list = document.getElementById('admin-list');
+  document.getElementById('admin-count').textContent = products.length;
+  list.innerHTML = '';
+  for (const p of products) {
+    const b = document.createElement('button');
+    b.className = 'admin-row';
+    b.onclick = () => editProduct(p.id);
+    const whCount = Object.keys(p.wh).filter(id => getWh(id) && p.wh[id].price != null).length;
+    b.innerHTML = `
+      <img src="${p.photo || ''}" alt="">
+      <div class="grow">
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="sub">▮▮ ${escapeHtml(p.barcode)} · ${whCount} 🏭</div>
+      </div>
+      <span class="chev">›</span>`;
+    list.appendChild(b);
+  }
+}
+
+function newProduct() {
+  editingProductId = null;
+  formPhoto = null;
+  openForm({ barcode: '', name: '', photo: null, wh: {} });
+  document.getElementById('form-title').textContent = t('addProduct');
+  document.getElementById('form-delete').style.display = 'none';
+}
+
+function addProductWithBarcode() {
+  newProduct();
+  document.getElementById('form-barcode').value = lastUnknownBarcode;
+}
+
+function editProduct(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  editingProductId = id;
+  formPhoto = p.photo;
+  openForm(p);
+  document.getElementById('form-title').textContent = t('editProduct');
+  document.getElementById('form-delete').style.display = 'block';
+}
+
+function openForm(p) {
+  document.getElementById('form-barcode').value = p.barcode || '';
+  document.getElementById('form-name').value = p.name || '';
+  const img = document.getElementById('photo-preview');
+  if (p.photo) { img.src = p.photo; img.style.display = 'block'; }
+  else { img.style.display = 'none'; img.removeAttribute('src'); }
+
+  const list = document.getElementById('form-wh-list');
+  list.innerHTML = '';
+  for (const w of warehouses) {
+    const e = p.wh[w.id] || {};
+    const row = document.createElement('div');
+    row.className = 'wh-price-row';
+    row.dataset.whId = w.id;
+    row.innerHTML = `
+      <span class="dot" style="background:${w.color}"></span>
+      <span class="wname">${escapeHtml(w.name)}</span>
+      <div><span class="mini-label">${t('price')} $</span>
+        <input class="price-in" inputmode="decimal" placeholder="—" value="${e.price != null ? e.price : ''}"></div>
+      <div><span class="mini-label">${t('stock')}</span>
+        <input class="stock-in" inputmode="numeric" placeholder="0" value="${e.stock != null ? e.stock : ''}"></div>`;
+    list.appendChild(row);
+  }
+  showScreen('form');
+}
+
+function onPhotoPicked(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      // downscale to keep localStorage small
+      const MAX = 700;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      formPhoto = c.toDataURL('image/jpeg', 0.75);
+      const prev = document.getElementById('photo-preview');
+      prev.src = formPhoto;
+      prev.style.display = 'block';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+  ev.target.value = '';
+}
+
+function saveProduct() {
+  const barcode = document.getElementById('form-barcode').value.trim();
+  const name = document.getElementById('form-name').value.trim();
+  if (!barcode) { toast(t('needBarcode')); return; }
+  if (!name && !formPhoto) { toast(t('needName')); return; }
+  const dup = products.find(p => p.barcode === barcode && p.id !== editingProductId);
+  if (dup) { toast(t('dupBarcode')); return; }
+
+  const wh = {};
+  document.querySelectorAll('#form-wh-list .wh-price-row').forEach(row => {
+    const priceRaw = row.querySelector('.price-in').value.trim().replace(',', '.');
+    const stockRaw = row.querySelector('.stock-in').value.trim();
+    if (priceRaw !== '') {
+      const price = parseFloat(priceRaw);
+      if (!isNaN(price)) {
+        wh[row.dataset.whId] = { price, stock: Math.max(0, parseInt(stockRaw, 10) || 0) };
+      }
     }
   });
+
+  if (editingProductId) {
+    const p = products.find(p => p.id === editingProductId);
+    Object.assign(p, { barcode, name: name || barcode, photo: formPhoto, wh });
+  } else {
+    products.unshift({ id: uid(), barcode, name: name || barcode, photo: formPhoto, wh });
+  }
+  try {
+    persist();
+  } catch (e) {
+    toast('Storage full — photo too large');
+    return;
+  }
+  toast(t('saved'));
+  showScreen('admin');
+}
+
+function deleteProduct() {
+  if (!editingProductId) return;
+  if (!confirm(t('confirmDelete'))) return;
+  products = products.filter(p => p.id !== editingProductId);
+  persist();
+  showScreen('admin');
+}
+
+// ---------- Init ----------
+function renderAll() {
+  renderHomePill();
+  renderHomeList();
+  renderAdmin();
+  renderKeypadDisplay();
+}
+load();
+buildKeypad();
+applyLang();
+renderAll();
 </script>
 </body>
 </html>
