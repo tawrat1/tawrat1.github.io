@@ -23,7 +23,7 @@ Overall grade: **solid MVP, ~80% of the way to chargeable production**. The miss
 
 ## Known weaknesses & compromises ⚠️ (ranked by importance)
 
-1. **Paywall is client-side only.** `subscriptionOk()` runs in JS. A tech-savvy user could edit the bundle and keep writing after trial expiry. RLS does not check `trial_ends_at`. → *Fix: add a write-policy condition or a `before insert/update` check against the business's subscription state. Cheap, high value.*
+1. ~~**Paywall is client-side only.**~~ **Fixed 2026-07-19** (see `supabase/migrations/20260719_server_side_paywall_enforcement.sql`). `ss_subscription_ok()` now gates INSERT/UPDATE on `ss_products`/`ss_stock`/`ss_warehouses`, and a trigger blocks owners from self-mutating `subscription_status`/`trial_ends_at`/`join_code`/`owner_id` via direct REST calls — the latter was a real hole (any owner could previously PATCH their own business row to `active` with a far-future trial). `subscriptionOk()` in `app.js` still runs client-side for UX (routing to the subscribe screen); the DB is now the source of truth backing it up. Remaining edge-function gap: `ss-workers` (create) doesn't check subscription state, so an expired owner can still add workers via that path — low priority since it doesn't itself unlock revenue-generating writes.
 2. **Payments are manual.** No Stripe webhook; the owner activates subscribers by SQL. Fine at 5 customers, painful at 50. → *Fix: `ss-stripe-webhook` edge function verifying Stripe signatures, matching `client_reference_id` (already passed = business_id), setting `subscription_status`. Needs the owner's Stripe secret key as a function secret.*
 3. **Worker auth is deliberately weak.** Credentials are derived (`w-{code}-{pin}@workers.scanstock.app` / `SS-{CODE}-{pin}`). Anyone who learns a business's join code can brute-force 4-digit PINs against the auth endpoint (Supabase's rate limiting is the only brake). Judged acceptable: workers are read-only and the data (grocery prices) is low-sensitivity. → *If risk profile changes: lengthen PINs, add join-code rotation, or move worker login behind an edge function with attempt counting. Any change to the formula must be made in BOTH `ss-workers` and the frontend, and existing workers must be recreated.*
 4. **Two signup paths exist.** The `ss_create_business` RPC remains as a fallback alongside `ss-signup`. Divergence risk (e.g. RPC doesn't reject `@workers.scanstock.app` emails — harmless today since that path requires an authed user, but keep them in sync or retire the RPC).
@@ -46,7 +46,7 @@ Overall grade: **solid MVP, ~80% of the way to chargeable production**. The miss
 
 ## Suggested order of work (agreed with owner)
 
-1. **Server-side paywall enforcement** (small, do it while touching the DB for #2)
+1. ~~**Server-side paywall enforcement**~~ Done 2026-07-19.
 2. **Sell mode** — new `ss_sales` table (id, business_id, product_id, warehouse_id, qty, price_at_sale, sold_by→member, created_at). RLS: members INSERT their own business's sales; SELECT owner-only (or all members — owner's choice). Workers also need stock decrement: do it in a `security definer` RPC (`ss_record_sale`) so workers never get raw UPDATE on `ss_stock`.
 3. **Receive mode** — same pattern, `ss_receipts` or reuse a signed-quantity movements table (`ss_stock_moves` with type sell/receive/adjust is the cleaner design — one table, reports fall out of it).
 4. **Low-stock alerts** — add `min_stock` to `ss_stock`, badge/list in Manage; later a daily email via scheduled edge function.
