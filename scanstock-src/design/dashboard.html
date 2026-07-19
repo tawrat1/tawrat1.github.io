@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScanStock — Owner Dashboard</title>
+<style>
+  /* ============ Design tokens — MD3-inspired, 8pt grid ============ */
+  :root {
+    --navy-950: #060D1F;   /* page background */
+    --navy-900: #0A1428;
+    --navy-800: #101E3C;   /* card surface */
+    --navy-700: #1A2C52;   /* card border / elevated */
+    --blue-500: #3B82F6;   /* electric blue primary */
+    --blue-400: #38BDF8;   /* electric cyan-blue accent */
+    --ink-hi:  #F2F6FF;    /* high-emphasis text */
+    --ink-med: #9FB0CC;    /* medium-emphasis text */
+    --ink-low: #5C6E8F;    /* low-emphasis text */
+    --good:    #34D399;
+    --warn:    #FBBF24;
+    --crit:    #F87171;
+    --r-lg: 24px; --r-md: 18px; --r-sm: 12px;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #1c2333;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .device {
+    width: 390px; height: 844px; overflow: hidden; position: relative;
+    background:
+      radial-gradient(420px 320px at 100% -5%, rgba(56,189,248,.14), transparent 65%),
+      radial-gradient(380px 300px at -10% 20%, rgba(59,130,246,.10), transparent 60%),
+      var(--navy-950);
+    display: flex; flex-direction: column;
+    color: var(--ink-hi);
+  }
+
+  /* ============ Top app bar ============ */
+  .appbar { padding: 20px var(--sp-3) 12px; display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%; flex: none;
+    background: linear-gradient(135deg, var(--blue-400), var(--blue-500));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 17px; color: #06121f;
+  }
+  .greet { flex: 1; min-width: 0; }
+  .greet .hi { font-size: 13px; color: var(--ink-med); font-weight: 500; }
+  .greet .who { font-size: 19px; font-weight: 700; letter-spacing: -.3px; }
+  .wh-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(59,130,246,.14); border: 1px solid rgba(59,130,246,.35);
+    border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--blue-400);
+  }
+  .wh-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue-400); }
+
+  .scroll { flex: 1; overflow: hidden; padding: 0 var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-2); }
+
+  /* ============ Hero card: sales goal ring ============ */
+  .card {
+    background: linear-gradient(180deg, rgba(26,44,82,.55), rgba(16,30,60,.85));
+    border: 1px solid rgba(94,130,196,.22);
+    border-radius: var(--r-lg);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 40px rgba(0,0,0,.35);
+  }
+  .hero { padding: 20px; display: flex; align-items: center; gap: 20px; }
+  .ring-wrap { position: relative; width: 118px; height: 118px; flex: none; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-center .pct { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .ring-center .cap { font-size: 11px; color: var(--ink-med); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .hero-info { flex: 1; min-width: 0; }
+  .hero-info .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink-med); }
+  .hero-info .value { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin: 4px 0 2px; }
+  .hero-info .goal { font-size: 13px; color: var(--ink-med); }
+  .hero-info .delta { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 12px; font-weight: 700; color: var(--good); background: rgba(52,211,153,.12); border-radius: 8px; padding: 4px 9px; }
+
+  /* ============ Stat cards row ============ */
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+  .stat { padding: 14px 16px; border-radius: var(--r-md); }
+  .stat .ico { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 8px; }
+  .stat .num { font-size: 24px; font-weight: 800; letter-spacing: -.5px; }
+  .stat .cap { font-size: 12px; color: var(--ink-med); font-weight: 600; margin-top: 2px; }
+  .ico-blue { background: rgba(56,189,248,.15); }
+  .ico-warn { background: rgba(251,191,36,.14); }
+  .stat .flag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; margin-top: 8px; border-radius: 7px; padding: 3px 8px; }
+  .flag-warn { color: var(--warn); background: rgba(251,191,36,.12); }
+
+  /* ============ Weekly sales mini chart ============ */
+  .chartcard { padding: 16px 18px 12px; border-radius: var(--r-md); }
+  .chartcard .head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2px; }
+  .chartcard .title { font-size: 14px; font-weight: 700; }
+  .chartcard .range { font-size: 12px; color: var(--ink-low); font-weight: 600; }
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 72px; padding-top: 24px; }
+  .barcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; background: rgba(56,189,248,.38); }
+  .bar.hot { background: linear-gradient(180deg, var(--blue-400), var(--blue-500)); position: relative; }
+  .bar.hot::after { content: '$118'; position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--ink-hi); white-space: nowrap; }
+  .barcol .day { font-size: 10px; color: var(--ink-low); font-weight: 600; }
+
+  /* ============ Low stock list ============ */
+  .listcard { border-radius: var(--r-md); overflow: hidden; }
+  .listcard .head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 6px; }
+  .listcard .title { font-size: 14px; font-weight: 700; }
+  .listcard .link { font-size: 12px; font-weight: 700; color: var(--blue-400); }
+  .lrow { display: flex; align-items: center; gap: 12px; padding: 10px 18px 12px; }
+  .lrow + .lrow { border-top: 1px solid rgba(94,130,196,.12); }
+  .lrow .pimg { width: 42px; height: 42px; border-radius: 11px; background: var(--navy-700); display: flex; align-items: center; justify-content: center; font-size: 21px; flex: none; }
+  .lrow .pinfo { flex: 1; min-width: 0; }
+  .lrow .pname { font-size: 14px; font-weight: 600; }
+  .lrow .pwh { font-size: 11px; color: var(--ink-low); font-weight: 600; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; border-radius: 7px; padding: 4px 9px; }
+  .badge.warn { color: var(--warn); background: rgba(251,191,36,.12); }
+  .badge.crit { color: var(--crit); background: rgba(248,113,113,.13); }
+
+  /* ============ Bottom navigation (MD3) ============ */
+  .navbar {
+    background: rgba(10,20,40,.9); backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(94,130,196,.15);
+    display: flex; align-items: center; padding: 10px 8px 22px; position: relative;
+  }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--ink-low); }
+  .nav-item .nico { font-size: 21px; line-height: 1; padding: 5px 18px; border-radius: 999px; }
+  .nav-item.on { color: var(--blue-400); }
+  .nav-item.on .nico { background: rgba(56,189,248,.16); }
+  .fab {
+    width: 62px; height: 62px; border-radius: 20px; flex: none; margin: 0 6px;
+    background: linear-gradient(135deg, var(--blue-400), var(--blue-500));
+    display: flex; align-items: center; justify-content: center; font-size: 27px;
+    box-shadow: 0 10px 26px rgba(59,130,246,.45), inset 0 1px 0 rgba(255,255,255,.35);
+    transform: translateY(-14px); color: #06121f;
+  }
+</style>
+</head>
+<body>
+<div class="device">
+
+  <div class="appbar">
+    <div class="avatar">T</div>
+    <div class="greet">
+      <div class="hi">Good morning 👋</div>
+      <div class="who">Tawrat's Shop</div>
+    </div>
+    <div class="wh-chip"><span class="dot"></span>Warehouse A</div>
+  </div>
+
+  <div class="scroll">
+
+    <!-- Hero: today's sales vs goal -->
+    <div class="card hero">
+      <div class="ring-wrap">
+        <svg width="118" height="118" viewBox="0 0 132 132">
+          <circle cx="66" cy="66" r="56" fill="none" stroke="rgba(94,130,196,.18)" stroke-width="11"/>
+          <circle cx="66" cy="66" r="56" fill="none" stroke="url(#rg)" stroke-width="11"
+                  stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="112.6"/>
+          <defs>
+            <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#38BDF8"/><stop offset="1" stop-color="#3B82F6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="ring-center">
+          <div class="pct">68%</div>
+          <div class="cap">of goal</div>
+        </div>
+      </div>
+      <div class="hero-info">
+        <div class="label">Today's sales</div>
+        <div class="value">$342</div>
+        <div class="goal">Goal $500 · 47 items sold</div>
+        <div class="delta">▲ 12% vs yesterday</div>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="card stat">
+        <div class="ico ico-blue">📦</div>
+        <div class="num">1,248</div>
+        <div class="cap">Items in stock</div>
+      </div>
+      <div class="card stat">
+        <div class="ico ico-warn">⚠️</div>
+        <div class="num">3</div>
+        <div class="cap">Products low</div>
+        <span class="flag flag-warn">⚠ Reorder soon</span>
+      </div>
+    </div>
+
+    <!-- Weekly sales -->
+    <div class="card chartcard">
+      <div class="head"><span class="title">Sales this week</span><span class="range">Jul 11 – 17</span></div>
+      <div class="bars">
+        <div class="barcol"><div class="bar" style="height:38%"></div><span class="day">Sat</span></div>
+        <div class="barcol"><div class="bar" style="height:52%"></div><span class="day">Sun</span></div>
+        <div class="barcol"><div class="bar" style="height:30%"></div><span class="day">Mon</span></div>
+        <div class="barcol"><div class="bar" style="height:64%"></div><span class="day">Tue</span></div>
+        <div class="barcol"><div class="bar" style="height:47%"></div><span class="day">Wed</span></div>
+        <div class="barcol"><div class="bar hot" style="height:88%"></div><span class="day">Thu</span></div>
+        <div class="barcol"><div class="bar" style="height:56%"></div><span class="day">Fri</span></div>
+      </div>
+    </div>
+
+    <!-- Low stock -->
+    <div class="card listcard">
+      <div class="head"><span class="title">Needs attention</span><span class="link">View all ›</span></div>
+      <div class="lrow">
+        <div class="pimg">🫒</div>
+        <div class="pinfo"><div class="pname">Cooking Oil 1L</div><div class="pwh">Warehouse A</div></div>
+        <span class="badge warn">⚠ LOW · 3</span>
+      </div>
+      <div class="lrow">
+        <div class="pimg">🥤</div>
+        <div class="pinfo"><div class="pname">Cola 12-pack</div><div class="pwh">Warehouse A</div></div>
+        <span class="badge crit">✕ OUT — B has 60</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="navbar">
+    <div class="nav-item on"><span class="nico">🏠</span>Home</div>
+    <div class="nav-item"><span class="nico">📊</span>Reports</div>
+    <div class="fab">📷</div>
+    <div class="nav-item"><span class="nico">📦</span>Stock</div>
+    <div class="nav-item"><span class="nico">⚙️</span>Manage</div>
+  </div>
+
+</div>
+</body>
+</html>

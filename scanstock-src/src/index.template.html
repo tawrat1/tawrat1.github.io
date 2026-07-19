@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b1015">
+<meta name="description" content="ScanStock — scan a barcode, see the product photo, price and warehouse stock instantly. Built for teams that work faster with pictures than paperwork.">
+<!-- PASTE YOUR STRIPE PAYMENT LINK IN content="" BELOW (e.g. https://buy.stripe.com/xxxx) -->
+<meta name="ss-payment-link" content="">
+<title>ScanStock — Scan. See. Sell.</title>
+<style>
+  :root {
+    --bg: #0b1015; --surface: #131b23; --card: #1a242f; --border: #27374a;
+    --accent: #00d4ff; --accent2: #0077ff; --green: #00e5a0; --red: #ff5c72;
+    --amber: #ffc24b; --text: #eef4fa; --muted: #7e93a8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif; font-size: 17px; overscroll-behavior: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select { font-family: inherit; }
+  img { display: block; }
+
+  .screen { display: none; min-height: 100dvh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ---------- Logo ---------- */
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -0.3px; }
+  .logo svg { flex: none; }
+  .logo .grad { background: linear-gradient(90deg, var(--accent), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* ---------- Landing ---------- */
+  #screen-landing { background: radial-gradient(1200px 600px at 80% -10%, rgba(0,119,255,.18), transparent), radial-gradient(900px 500px at -10% 30%, rgba(0,229,160,.10), transparent), var(--bg); }
+  .land-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; max-width: 960px; width: 100%; margin: 0 auto; }
+  .land-nav .links { display: flex; gap: 10px; }
+  .land-nav .links button { font-size: 15px; font-weight: 700; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); }
+  .hero { max-width: 960px; margin: 0 auto; padding: 40px 20px 30px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .hero h1 { font-size: clamp(30px, 6vw, 52px); line-height: 1.15; font-weight: 800; letter-spacing: -1px; max-width: 700px; }
+  .hero h1 .grad { background: linear-gradient(90deg, var(--accent), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 560px; }
+  .hero-cta { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 380px; margin-top: 8px; }
+  .btn-hero { background: linear-gradient(135deg, #00b8e0, #0077ff); color: #fff; border-radius: 16px; padding: 18px; font-size: 19px; font-weight: 800; box-shadow: 0 8px 30px rgba(0,150,255,.35); }
+  .btn-hero:active { transform: scale(.98); }
+  .btn-ghost-lg { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; font-size: 17px; font-weight: 700; }
+  .phone-demo { margin: 26px auto 0; width: min(300px, 78vw); border: 1px solid var(--border); border-radius: 34px; padding: 12px; background: var(--surface); box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+  .phone-demo .demo-screen { border-radius: 24px; overflow: hidden; background: var(--bg); border: 1px solid var(--border); }
+  .demo-topbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
+  .demo-pill { display: flex; align-items: center; gap: 6px; background: var(--card); border-radius: 999px; padding: 5px 10px; font-size: 11px; }
+  .demo-scan { margin: 12px; background: linear-gradient(135deg, #00b8e0, #0077ff); border-radius: 14px; padding: 16px; text-align: center; color: #fff; font-weight: 800; font-size: 14px; }
+  .demo-prod { display: flex; gap: 10px; margin: 0 12px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; align-items: center; }
+  .demo-prod .demo-img { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #24313f; flex: none; }
+  .demo-prod .demo-price { margin-left: auto; color: var(--green); font-weight: 800; font-size: 16px; }
+  .features { max-width: 960px; margin: 0 auto; padding: 30px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .feat { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 22px; }
+  .feat .ico { font-size: 34px; }
+  .feat h3 { margin: 10px 0 6px; font-size: 18px; }
+  .feat p { color: var(--muted); font-size: 15px; line-height: 1.55; }
+  .pricing { max-width: 420px; margin: 10px auto 40px; padding: 0 20px; }
+  .price-card { background: var(--card); border: 2px solid var(--accent); border-radius: 22px; padding: 26px; text-align: center; }
+  .price-card .amount { font-size: 38px; font-weight: 800; margin: 8px 0 2px; }
+  .price-card .trial { color: var(--green); font-weight: 700; margin-bottom: 14px; }
+  .land-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px; }
+
+  /* ---------- Auth ---------- */
+  .auth-wrap { flex: 1; display: flex; flex-direction: column; padding: 20px; max-width: 440px; width: 100%; margin: 0 auto; gap: 16px; }
+  .auth-tabs { display: flex; background: var(--card); border-radius: 14px; padding: 5px; border: 1px solid var(--border); }
+  .auth-tabs button { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .auth-tabs button.on { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .pane { display: flex; flex-direction: column; gap: 12px; }
+  .field label { display: block; color: var(--muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .field input { width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 14px; padding: 15px 16px; font-size: 17px; outline: none; }
+  .field input:focus { border-color: var(--accent); }
+  .primary-btn { background: var(--green); color: #04301f; border-radius: 16px; padding: 17px; font-size: 19px; font-weight: 800; width: 100%; }
+  .primary-btn:active { opacity: .85; }
+  .blue-btn { background: linear-gradient(135deg, #00b8e0, #0077ff); color: #fff; border-radius: 16px; padding: 17px; font-size: 18px; font-weight: 800; width: 100%; }
+  .danger-btn { background: transparent; color: var(--red); border: 1px solid var(--red); border-radius: 16px; padding: 14px; font-size: 16px; font-weight: 700; width: 100%; }
+  .ghost-btn { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 16px; padding: 14px; font-size: 16px; font-weight: 700; width: 100%; }
+  .link-btn { color: var(--accent); font-size: 15px; font-weight: 600; padding: 8px; }
+  .notice { background: rgba(0,229,160,.1); border: 1px solid var(--green); color: var(--green); border-radius: 14px; padding: 14px; font-size: 15px; line-height: 1.5; display: none; }
+
+  .code-input { text-transform: uppercase; letter-spacing: 6px; text-align: center; font-size: 24px !important; font-weight: 800; }
+  .pin-input { letter-spacing: 8px; text-align: center; font-size: 26px !important; font-weight: 800; }
+
+  /* ---------- Top bar / app chrome ---------- */
+  .topbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  .topbar h1 { font-size: 19px; font-weight: 700; flex: 1; }
+  .back-btn { background: var(--card); width: 44px; height: 44px; border-radius: 12px; font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); flex: none; }
+  .icon-btn { background: var(--card); height: 44px; padding: 0 14px; border-radius: 12px; font-size: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+  .icon-btn span { font-size: 14px; color: var(--muted); }
+  .wh-pill { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 10px 16px; font-size: 16px; font-weight: 600; }
+  .wh-pill .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .trial-banner { display: none; text-align: center; font-size: 13px; font-weight: 700; padding: 7px 12px; background: rgba(0,212,255,.12); color: var(--accent); }
+  .trial-banner.warn { background: rgba(255,194,75,.14); color: var(--amber); }
+  .trial-banner.over { background: rgba(255,92,114,.15); color: var(--red); }
+
+  .home-body { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 16px; max-width: 560px; width: 100%; margin: 0 auto; }
+  .scan-big { background: linear-gradient(135deg, #00b8e0, #0077ff); color: #fff; border-radius: 24px; padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; box-shadow: 0 8px 30px rgba(0,150,255,.35); }
+  .scan-big .big-ico { font-size: 56px; line-height: 1; }
+  .scan-big:active { transform: scale(.98); }
+  .search-row { display: flex; gap: 10px; }
+  .search-row input { flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 14px; padding: 14px 16px; font-size: 17px; outline: none; min-width: 0; }
+  .search-row input:focus { border-color: var(--accent); }
+  .search-row button, .search-row .sq { background: var(--card); border: 1px solid var(--border); border-radius: 14px; width: 54px; font-size: 22px; flex: none; }
+  .keypad-btn { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
+  .section-label { color: var(--muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .prod-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; text-align: start; display: flex; flex-direction: column; }
+  .prod-card:active { transform: scale(.97); }
+  .thumb-wrap { width: 100%; aspect-ratio: 1; background: #0a1118; }
+  .prod-card .thumb { width: 100%; height: 100%; object-fit: cover; }
+  .prod-card .thumb.ph, .detail-photo.ph { display: flex; align-items: center; justify-content: center; font-size: 54px; color: var(--muted); }
+  .prod-card .info { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .prod-card .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prod-card .price { font-size: 20px; font-weight: 800; color: var(--green); }
+  .prod-card .price.none { color: var(--muted); font-size: 14px; font-weight: 600; }
+  .stock-chip { font-size: 12px; font-weight: 700; border-radius: 6px; padding: 1px 7px; align-self: flex-start; }
+  .stock-ok { background: rgba(0,229,160,.15); color: var(--green); }
+  .stock-low { background: rgba(255,194,75,.15); color: var(--amber); }
+  .stock-out { background: rgba(255,92,114,.15); color: var(--red); }
+  .empty-note { color: var(--muted); text-align: center; padding: 40px 20px; font-size: 16px; line-height: 1.6; }
+  .empty-note .big-ico { font-size: 48px; display: block; margin-bottom: 12px; }
+
+  /* ---------- Scanner ---------- */
+  #screen-scan { background: #000; }
+  .scan-view { position: relative; flex: 1; overflow: hidden; display: flex; }
+  .scan-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .scan-frame { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: min(78vw, 420px); height: 44vw; max-height: 240px; border-radius: 18px; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); outline: 3px solid var(--accent); }
+  .scan-frame::after { content: ''; position: absolute; left: 8%; right: 8%; top: 50%; height: 2px; background: var(--red); opacity: .8; animation: scanline 1.6s ease-in-out infinite alternate; }
+  @keyframes scanline { from { transform: translateY(-40px); } to { transform: translateY(40px); } }
+  .scan-hint { position: absolute; left: 0; right: 0; top: calc(42% + 140px); text-align: center; color: #fff; font-size: 17px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.8); padding: 0 20px; }
+  .scan-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .scan-close { position: absolute; top: 14px; inset-inline-end: 14px; z-index: 5; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 22px; border: 1px solid rgba(255,255,255,.25); }
+  .scan-err { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 30px; text-align: center; color: #fff; background: #000; }
+
+  /* ---------- Keypad ---------- */
+  .keypad-wrap { flex: 1; display: flex; flex-direction: column; padding: 16px; max-width: 420px; width: 100%; margin: 0 auto; }
+  .keypad-display { background: var(--card); border: 1px solid var(--border); border-radius: 16px; font-size: 30px; font-weight: 700; letter-spacing: 3px; padding: 18px; text-align: center; min-height: 74px; margin-bottom: 16px; word-break: break-all; }
+  .keypad-display .ph { color: var(--muted); font-size: 17px; letter-spacing: 0; font-weight: 500; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .keypad button { background: var(--card); border: 1px solid var(--border); font-size: 26px; font-weight: 700; border-radius: 16px; padding: 18px 0; }
+  .keypad button:active { background: var(--border); }
+  .keypad .go { background: var(--green); color: #04301f; font-size: 24px; }
+  .keypad .del { color: var(--red); }
+
+  /* ---------- Detail ---------- */
+  .detail-body { flex: 1; padding-bottom: 30px; max-width: 560px; width: 100%; margin: 0 auto; }
+  .detail-photo { width: 100%; aspect-ratio: 1.15; object-fit: cover; background: #0a1118; }
+  .detail-info { padding: 18px 16px; display: flex; flex-direction: column; gap: 16px; }
+  .detail-name { font-size: 26px; font-weight: 800; line-height: 1.25; }
+  .detail-barcode { color: var(--muted); font-size: 14px; letter-spacing: 1px; }
+  .price-box { background: var(--card); border: 2px solid var(--green); border-radius: 20px; padding: 18px; display: flex; align-items: center; gap: 14px; }
+  .price-box .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .price-box .wh-name { font-size: 15px; color: var(--muted); font-weight: 600; }
+  .price-box .amount { font-size: 40px; font-weight: 800; color: var(--green); line-height: 1.1; }
+  .price-box .amount.out { color: var(--red); font-size: 26px; }
+  .price-box .grow { flex: 1; min-width: 0; }
+  .price-box .stock-chip { font-size: 14px; padding: 3px 10px; }
+  .other-wh-list { display: flex; flex-direction: column; gap: 10px; }
+  .wh-row { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-align: start; width: 100%; }
+  .wh-row:active { background: var(--border); }
+  .wh-row .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .wh-row .grow { flex: 1; min-width: 0; }
+  .wh-row .wname { font-weight: 700; font-size: 16px; }
+  .wh-row .wprice { font-size: 22px; font-weight: 800; color: var(--green); }
+  .wh-row .wprice.none { color: var(--muted); font-size: 14px; font-weight: 600; }
+  .inline-edit { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px; font-size: 16px; outline: none; }
+  .icon-only { font-size: 20px; flex: none; padding: 4px; }
+
+  /* ---------- Form ---------- */
+  .form-body { flex: 1; padding: 16px 16px 40px; display: flex; flex-direction: column; gap: 16px; max-width: 560px; width: 100%; margin: 0 auto; }
+  .photo-pick { width: 100%; aspect-ratio: 1.6; border-radius: 18px; overflow: hidden; background: var(--card); border: 2px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: 16px; font-weight: 600; position: relative; }
+  .photo-pick img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .photo-pick .big-ico { font-size: 44px; }
+  .barcode-field { display: flex; gap: 10px; }
+  .barcode-field input { flex: 1; min-width: 0; }
+  .barcode-field button { background: var(--card); border: 1px solid var(--border); border-radius: 14px; width: 56px; font-size: 22px; flex: none; }
+  .wh-price-row { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .wh-price-row .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .wh-price-row .wname { flex: 1; font-weight: 700; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wh-price-row input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px; font-size: 17px; text-align: center; outline: none; }
+  .wh-price-row .price-in { width: 90px; }
+  .wh-price-row .stock-in { width: 64px; }
+  .mini-label { font-size: 11px; color: var(--muted); text-align: center; display: block; margin-bottom: 3px; }
+
+  /* ---------- Admin ---------- */
+  .admin-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; width: 100%; margin: 0 auto; }
+  .admin-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tool-btn { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
+  .tool-btn .ico { font-size: 26px; }
+  .code-banner { background: var(--card); border: 1px dashed var(--accent); border-radius: 16px; padding: 14px 16px; text-align: center; }
+  .code-banner .code { font-size: 30px; font-weight: 800; letter-spacing: 8px; color: var(--accent); }
+  .code-banner .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .sub-status { text-align: center; font-size: 14px; font-weight: 700; color: var(--accent); }
+  .sub-status.ok { color: var(--green); }
+  .sub-status.over { color: var(--red); }
+  .admin-row { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 10px; display: flex; align-items: center; gap: 12px; width: 100%; text-align: start; }
+  .admin-row img, .admin-row .mini-ph { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: #0a1118; flex: none; }
+  .admin-row .mini-ph { display: flex; align-items: center; justify-content: center; font-size: 26px; }
+  .admin-row .grow { flex: 1; min-width: 0; }
+  .admin-row .name { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .admin-row .sub { color: var(--muted); font-size: 13px; }
+  .admin-row .chev { color: var(--muted); font-size: 20px; }
+
+  /* ---------- Subscribe ---------- */
+  .sub-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 18px; text-align: center; max-width: 440px; margin: 0 auto; }
+  .sub-wrap .big-ico { font-size: 60px; }
+  .sub-wrap h2 { font-size: 24px; }
+  .sub-wrap p { color: var(--muted); line-height: 1.6; }
+  .sub-price-tag { font-size: 34px; font-weight: 800; color: var(--green); }
+
+  /* ---------- Sheets, toast, nav, busy ---------- */
+  .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50; display: none; align-items: flex-end; justify-content: center; }
+  .sheet-backdrop.open { display: flex; }
+  .sheet { background: var(--surface); border-radius: 22px 22px 0 0; width: 100%; max-width: 560px; padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; max-height: 80dvh; overflow-y: auto; }
+  .sheet h2 { font-size: 18px; margin-bottom: 4px; }
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; font-size: 15px; font-weight: 600; z-index: 100; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 90vw; text-align: center; }
+  .toast.show { opacity: 1; }
+  .bottom-nav { position: sticky; bottom: 0; z-index: 10; display: flex; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); }
+  .bottom-nav button { flex: 1; padding: 10px 0 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .bottom-nav button .ico { font-size: 24px; line-height: 1; }
+  .bottom-nav button.on { color: var(--accent); }
+  .lang-row { display: flex; gap: 8px; }
+  .lang-row button { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 0; font-size: 15px; font-weight: 700; }
+  .lang-row button.on { border-color: var(--accent); color: var(--accent); }
+  #busy { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; background: rgba(8,12,16,.55); backdrop-filter: blur(2px); }
+  .spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid var(--border); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  [dir="rtl"] .back-btn { transform: scaleX(-1); }
+  [dir="rtl"] .chev { transform: scaleX(-1); }
+</style>
+</head>
+<body>
+
+<!-- ================= LANDING ================= -->
+<div class="screen active" id="screen-landing">
+  <div class="land-nav">
+    <button id="nav-brand" class="logo" type="button">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none"><rect x="1" y="1" width="30" height="30" rx="9" stroke="url(#lg1)" stroke-width="2"/><path d="M8 10v12M12 10v12M16 10v12M21 10v12M25 10v12" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round"/><rect x="4" y="15" width="24" height="2.6" rx="1.3" fill="#ff5c72"/><defs><linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#00d4ff"/><stop offset="1" stop-color="#00e5a0"/></linearGradient></defs></svg>
+      <span>Scan<span class="grad">Stock</span></span>
+    </button>
+    <div class="links">
+      <button type="button" id="cta-login" data-i18n="ownerLogin">Owner log in</button>
+      <button type="button" id="cta-worker" data-i18n="workerLogin">Worker log in</button>
+    </div>
+  </div>
+  <div class="hero">
+    <h1><span data-i18n="tagline">Scan a barcode. See the picture, price and stock — instantly.</span></h1>
+    <p data-i18n="heroSub">Made for shops and warehouses where workers should not need to read invoices. One scan shows everything.</p>
+    <div class="hero-cta">
+      <button type="button" class="btn-hero" id="cta-signup" data-i18n="startTrial">Start 14-day free trial</button>
+    </div>
+    <div class="phone-demo" aria-hidden="true">
+      <div class="demo-screen">
+        <div class="demo-topbar"><span>ScanStock</span><span class="demo-pill"><span style="width:8px;height:8px;border-radius:50%;background:#00d4ff"></span>Warehouse A</span></div>
+        <div class="demo-scan">📷 SCAN</div>
+        <div class="demo-prod"><div class="demo-img">🍚</div><div style="font-size:13px;font-weight:700">Rice 5kg<br><span class="stock-chip stock-ok" style="font-size:10px">IN STOCK · 40</span></div><div class="demo-price">$12.99</div></div>
+        <div class="demo-prod"><div class="demo-img">🥤</div><div style="font-size:13px;font-weight:700">Cola 12-pack<br><span class="stock-chip stock-out" style="font-size:10px">OUT OF STOCK</span></div><div class="demo-price" style="color:#ff5c72">$8.99</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="ico">📷</div><h3 data-i18n="feat1t">Scan & see</h3><p data-i18n="feat1d">Point the phone at any barcode. The product photo, price and stock appear.</p></div>
+    <div class="feat"><div class="ico">🏭</div><h3 data-i18n="feat2t">Every warehouse</h3><p data-i18n="feat2d">Out of stock? The app shows which other warehouse has it, and its price.</p></div>
+    <div class="feat"><div class="ico">🔢</div><h3 data-i18n="feat3t">No reading needed</h3><p data-i18n="feat3d">Pictures and numbers first. Workers log in with just a code and a PIN.</p></div>
+  </div>
+  <div class="pricing">
+    <div class="price-card">
+      <div class="section-label" data-i18n="pricingT">Simple pricing</div>
+      <div class="amount price-text">$9.99 / month</div>
+      <div class="trial" data-i18n="pricingTrial">14 days free — no card needed</div>
+      <button type="button" class="btn-hero" style="width:100%" onclick="document.getElementById('cta-signup').click()" data-i18n="startTrial">Start 14-day free trial</button>
+    </div>
+  </div>
+  <div style="max-width:420px;margin:0 auto 20px;padding:0 20px"><div class="lang-row"></div></div>
+  <div class="land-footer">ScanStock © 2026</div>
+</div>
+
+<!-- ================= OWNER AUTH ================= -->
+<div class="screen" id="screen-auth">
+  <div class="topbar">
+    <button type="button" class="back-btn" id="auth-back">‹</button>
+    <h1 class="logo"><span>Scan<span class="grad">Stock</span></span></h1>
+  </div>
+  <div class="auth-wrap">
+    <div class="auth-tabs">
+      <button type="button" id="tab-signup" class="on" data-i18n="signupT">Create your business</button>
+      <button type="button" id="tab-login" data-i18n="loginT">Owner log in</button>
+    </div>
+    <div class="pane" id="pane-signup">
+      <div class="notice" id="su-done" data-i18n="checkEmail">Check your email and click the confirmation link, then log in.</div>
+      <div class="field"><label data-i18n="bizName">Business name</label><input id="su-bizname" autocomplete="organization"></div>
+      <div class="field"><label data-i18n="yourName">Your name</label><input id="su-myname" autocomplete="name"></div>
+      <div class="field"><label data-i18n="email">Email</label><input id="su-email" type="email" autocomplete="email" inputmode="email"></div>
+      <div class="field"><label data-i18n="password">Password</label><input id="su-password" type="password" autocomplete="new-password"></div>
+      <button type="button" class="blue-btn" id="su-submit" data-i18n="createAccount">Create account</button>
+    </div>
+    <div class="pane" id="pane-login" style="display:none">
+      <div class="field"><label data-i18n="email">Email</label><input id="li-email" type="email" autocomplete="email" inputmode="email"></div>
+      <div class="field"><label data-i18n="password">Password</label><input id="li-password" type="password" autocomplete="current-password"></div>
+      <button type="button" class="blue-btn" id="li-submit" data-i18n="logIn">Log in</button>
+      <button type="button" class="link-btn" id="li-forgot" data-i18n="forgotPw">Forgot password?</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= WORKER LOGIN ================= -->
+<div class="screen" id="screen-worker">
+  <div class="topbar">
+    <button type="button" class="back-btn" id="worker-back">‹</button>
+    <h1 data-i18n="workerT">Worker log in</h1>
+  </div>
+  <div class="auth-wrap" style="justify-content:center">
+    <div style="text-align:center;font-size:52px">👷</div>
+    <p style="text-align:center;color:var(--muted)" data-i18n="workerHint">Ask your boss for the code and your PIN</p>
+    <div class="field"><label data-i18n="bizCode">BUSINESS CODE</label><input id="wl-code" class="code-input" maxlength="6" autocomplete="off" autocapitalize="characters"></div>
+    <div class="field"><label data-i18n="pin">PIN</label><input id="wl-pin" class="pin-input" maxlength="6" inputmode="numeric" type="password" autocomplete="off"></div>
+    <button type="button" class="blue-btn" id="wl-submit" data-i18n="enter">ENTER</button>
+  </div>
+</div>
+
+<!-- ================= CREATE BUSINESS (resume) ================= -->
+<div class="screen" id="screen-createbiz">
+  <div class="topbar"><h1 class="logo"><span>Scan<span class="grad">Stock</span></span></h1></div>
+  <div class="auth-wrap" style="justify-content:center">
+    <div class="field"><label data-i18n="bizName">Business name</label><input id="cb-bizname"></div>
+    <div class="field"><label data-i18n="yourName">Your name</label><input id="cb-myname"></div>
+    <button type="button" class="blue-btn" id="cb-submit" data-i18n="createAccount">Create account</button>
+  </div>
+</div>
+
+<!-- ================= HOME ================= -->
+<div class="screen" id="screen-home">
+  <div class="topbar">
+    <h1 class="logo" style="font-size:18px"><span>Scan<span class="grad">Stock</span></span></h1>
+    <button type="button" class="wh-pill" id="home-wh-pill">
+      <span class="dot" id="home-wh-dot"></span>
+      <span id="home-wh-name"></span>
+      <span style="color:var(--muted)">▾</span>
+    </button>
+  </div>
+  <div class="trial-banner" id="trial-banner"></div>
+  <div class="home-body">
+    <button type="button" class="scan-big" id="scan-btn">
+      <span class="big-ico">📷</span>
+      <span data-i18n="scanBtn">SCAN BARCODE</span>
+    </button>
+    <div class="search-row">
+      <input id="search-input" data-i18n-ph="searchPh" placeholder="Search product…">
+      <button type="button" class="sq" onclick="document.getElementById('search-input').focus()">🔍</button>
+    </div>
+    <button type="button" class="keypad-btn" id="open-keypad">
+      <span style="font-size:20px">🔢</span> <span data-i18n="typeBarcode">Type barcode number</span>
+    </button>
+    <div class="section-label" data-i18n="products">Products</div>
+    <div class="prod-grid" id="home-grid"></div>
+    <div class="empty-note" id="home-empty" style="display:none">
+      <span class="big-ico">📦</span>
+      <span data-i18n="noProducts">No products yet.</span>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button type="button" class="on" id="nav-home"><span class="ico">🏠</span><span data-i18n="navHome">Home</span></button>
+    <button type="button" id="nav-admin"><span class="ico">⚙️</span><span data-i18n="navManage">Manage</span></button>
+  </div>
+</div>
+
+<!-- ================= SCANNER ================= -->
+<div class="screen" id="screen-scan">
+  <div class="scan-view">
+    <video id="scan-video" playsinline muted></video>
+    <div class="scan-frame"></div>
+    <div class="scan-hint" data-i18n="scanHint">Point camera at the barcode</div>
+    <button type="button" class="scan-close" id="scan-close">✕</button>
+    <div class="scan-err" id="scan-err">
+      <span style="font-size:48px">🚫📷</span>
+      <div data-i18n="camError" style="font-size:17px;line-height:1.5">Camera not available. You can type the barcode number instead.</div>
+      <button type="button" class="primary-btn" style="max-width:280px" id="scan-manual2" data-i18n="typeBarcode">Type barcode number</button>
+    </div>
+    <div class="scan-bottom">
+      <button type="button" class="ghost-btn" id="scan-manual">🔢 <span data-i18n="typeBarcode">Type barcode number</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= KEYPAD ================= -->
+<div class="screen" id="screen-keypad">
+  <div class="topbar">
+    <button type="button" class="back-btn" id="keypad-back">‹</button>
+    <h1 data-i18n="typeBarcode">Type barcode number</h1>
+  </div>
+  <div class="keypad-wrap">
+    <div class="keypad-display" id="keypad-display"></div>
+    <div class="keypad" id="keypad"></div>
+  </div>
+</div>
+
+<!-- ================= DETAIL ================= -->
+<div class="screen" id="screen-detail">
+  <div class="topbar">
+    <button type="button" class="back-btn" id="detail-back">‹</button>
+    <h1 data-i18n="productInfo">Product</h1>
+    <button type="button" class="icon-btn" id="detail-edit">✏️</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<!-- ================= NOT FOUND ================= -->
+<div class="screen" id="screen-notfound">
+  <div class="topbar">
+    <button type="button" class="back-btn" id="notfound-back">‹</button>
+    <h1 data-i18n="notFoundTitle">Not found</h1>
+  </div>
+  <div class="form-body" style="justify-content:center;text-align:center;gap:20px">
+    <span style="font-size:64px">❓📦</span>
+    <div style="font-size:18px;line-height:1.5">
+      <span data-i18n="notFoundMsg">This barcode is not in the system:</span><br>
+      <b id="notfound-code" style="font-size:22px;letter-spacing:2px"></b>
+    </div>
+    <button type="button" class="primary-btn" id="notfound-add">➕ <span data-i18n="addThis">Add this product</span></button>
+    <button type="button" class="ghost-btn" id="notfound-rescan">📷 <span data-i18n="scanAgain">Scan again</span></button>
+  </div>
+</div>
+
+<!-- ================= ADMIN ================= -->
+<div class="screen" id="screen-admin">
+  <div class="topbar">
+    <h1 data-i18n="manage">Manage</h1>
+  </div>
+  <div class="admin-body">
+    <div class="code-banner">
+      <div class="section-label" data-i18n="yourCode">Your business code</div>
+      <div class="code" id="admin-code">—</div>
+      <div class="hint" data-i18n="codeHint">Workers use this code + their PIN to log in</div>
+    </div>
+    <div class="sub-status" id="admin-substatus"></div>
+    <div class="admin-tools">
+      <button type="button" class="tool-btn" id="admin-wh"><span class="ico">🏭</span><span data-i18n="warehouses">Warehouses</span></button>
+      <button type="button" class="tool-btn" id="admin-workers"><span class="ico">👷</span><span data-i18n="workers">Workers</span></button>
+      <button type="button" class="tool-btn" id="admin-settings"><span class="ico">⚙️</span><span data-i18n="settings">Settings</span></button>
+      <button type="button" class="tool-btn" id="admin-logout"><span class="ico">🚪</span><span data-i18n="logout">Log out</span></button>
+    </div>
+    <button type="button" class="primary-btn" id="admin-add">➕ <span data-i18n="addProduct">Add product</span></button>
+    <div class="section-label"><span data-i18n="products">Products</span> (<span id="admin-count">0</span>)</div>
+    <div id="admin-list" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+  <div class="bottom-nav">
+    <button type="button" id="nav-home2"><span class="ico">🏠</span><span data-i18n="navHome">Home</span></button>
+    <button type="button" class="on"><span class="ico">⚙️</span><span data-i18n="navManage">Manage</span></button>
+  </div>
+</div>
+
+<!-- ================= PRODUCT FORM ================= -->
+<div class="screen" id="screen-form">
+  <div class="topbar">
+    <button type="button" class="back-btn" id="form-back">‹</button>
+    <h1 id="form-title" data-i18n="addProduct">Add product</h1>
+  </div>
+  <div class="form-body">
+    <button type="button" class="photo-pick" id="photo-pick">
+      <img id="photo-preview" style="display:none" alt="">
+      <span class="big-ico">📸</span>
+      <span data-i18n="takePhoto">Take a photo</span>
+    </button>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
+    <div class="field">
+      <label data-i18n="barcode">Barcode</label>
+      <div class="barcode-field">
+        <input id="form-barcode" inputmode="numeric" placeholder="0123456789">
+        <button type="button" id="form-scan">📷</button>
+      </div>
+    </div>
+    <div class="field">
+      <label data-i18n="prodName">Product name</label>
+      <input id="form-name">
+    </div>
+    <div class="section-label" data-i18n="priceStockPerWh">Price & stock per warehouse</div>
+    <div id="form-wh-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <button type="button" class="primary-btn" id="form-save">💾 <span data-i18n="save">Save</span></button>
+    <button type="button" class="danger-btn" id="form-delete" style="display:none">🗑 <span data-i18n="delete">Delete product</span></button>
+  </div>
+</div>
+
+<!-- ================= SUBSCRIBE ================= -->
+<div class="screen" id="screen-subscribe">
+  <div class="topbar"><h1 class="logo"><span>Scan<span class="grad">Stock</span></span></h1></div>
+  <div class="sub-wrap">
+    <span class="big-ico">⏰</span>
+    <h2 data-i18n="subT">Subscribe to keep using ScanStock</h2>
+    <p data-i18n="subMsg">Your 14-day free trial has ended.</p>
+    <div class="sub-price-tag" id="sub-price"></div>
+    <button type="button" class="btn-hero" id="sub-btn" style="width:100%" data-i18n="subBtn">Subscribe now</button>
+    <p id="sub-note" style="font-size:14px"></p>
+    <button type="button" class="ghost-btn" id="sub-logout" data-i18n="logout">Log out</button>
+  </div>
+</div>
+
+<!-- ================= SHEETS ================= -->
+<div class="sheet-backdrop" id="wh-picker">
+  <div class="sheet">
+    <h2 data-i18n="chooseWh">Choose warehouse</h2>
+    <div id="wh-picker-list" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="wh-manager">
+  <div class="sheet">
+    <h2 data-i18n="warehouses">Warehouses</h2>
+    <div id="wh-manager-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="search-row" style="margin-top:6px">
+      <input id="new-wh-name" data-i18n-ph="newWhPh" placeholder="New warehouse name…">
+      <button type="button" id="add-wh-btn" style="background:var(--green);color:#04301f;border:none">➕</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="workers-sheet">
+  <div class="sheet">
+    <h2 data-i18n="workers">Workers</h2>
+    <div id="workers-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="section-label" style="margin-top:8px" data-i18n="addWorker">Add worker</div>
+    <input id="new-worker-name" class="inline-edit" style="padding:14px" data-i18n-ph="workerName" placeholder="Worker name">
+    <input id="new-worker-pin" class="inline-edit" style="padding:14px" inputmode="numeric" maxlength="6" data-i18n-ph="workerPin" placeholder="PIN (4-6 numbers)">
+    <button type="button" class="primary-btn" id="add-worker-btn">➕ <span data-i18n="addWorker">Add worker</span></button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="settings-sheet">
+  <div class="sheet">
+    <h2 data-i18n="settings">Settings</h2>
+    <div class="lang-row"></div>
+    <div class="field" style="margin-top:8px">
+      <label data-i18n="currency">Currency symbol</label>
+      <input id="set-currency" maxlength="4">
+    </div>
+    <button type="button" class="primary-btn" id="save-currency">💾 <span data-i18n="save">Save</span></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="busy"><div class="spinner"></div></div>
+
+<script>/*APP_JS*/</script>
+</body>
+</html>
