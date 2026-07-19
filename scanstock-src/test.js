@@ -143,6 +143,21 @@ async function seedSession(page) {
   await page.waitForTimeout(200);
   console.log('[owner] workers listed:', await page.locator('#workers-list .wh-row').count());
   await page.mouse.click(10, 100);
+  // CSV import sheet
+  await page.click('#admin-import');
+  await page.waitForTimeout(200);
+  console.log('[owner] import sheet open:', await page.locator('#import-sheet.open').count());
+  const csv = 'barcode,name,warehouse,price,stock\n'
+    + '5000000000001,Cooking Oil 1L,Warehouse A,4.50,120\n'
+    + '5000000000001,Cooking Oil 1L,Warehouse B,4.25,30\n'
+    + '5000000000002,Cola 12-pack,Nonexistent Warehouse,8.00,60\n';
+  await page.setInputFiles('#import-file', { name: 'products.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await page.waitForTimeout(200);
+  console.log('[owner] import preview:', (await page.locator('#import-summary').textContent()).replace(/\s+/g, ' '));
+  console.log('[owner] import confirm visible:', await page.locator('#import-confirm').isVisible());
+  await page.click('#import-confirm');
+  await page.waitForTimeout(300);
+  console.log('[owner] import sheet closed after confirm:', await page.locator('#import-sheet.open').count() === 0);
   // add product form
   await page.click('#admin-add');
   await page.waitForTimeout(200);

@@ -437,6 +437,7 @@
     <div class="admin-tools">
       <button type="button" class="tool-btn" id="admin-wh"><span class="ico">🏭</span><span data-i18n="warehouses">Warehouses</span></button>
       <button type="button" class="tool-btn" id="admin-workers"><span class="ico">👷</span><span data-i18n="workers">Workers</span></button>
+      <button type="button" class="tool-btn" id="admin-import"><span class="ico">📄</span><span data-i18n="importCsv">Import CSV</span></button>
       <button type="button" class="tool-btn" id="admin-settings"><span class="ico">⚙️</span><span data-i18n="settings">Settings</span></button>
       <button type="button" class="tool-btn" id="admin-logout"><span class="ico">🚪</span><span data-i18n="logout">Log out</span></button>
     </div>
@@ -522,6 +523,18 @@
     <input id="new-worker-name" class="inline-edit" style="padding:14px" data-i18n-ph="workerName" placeholder="Worker name">
     <input id="new-worker-pin" class="inline-edit" style="padding:14px" inputmode="numeric" maxlength="6" data-i18n-ph="workerPin" placeholder="PIN (4-6 numbers)">
     <button type="button" class="primary-btn" id="add-worker-btn">➕ <span data-i18n="addWorker">Add worker</span></button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="import-sheet">
+  <div class="sheet">
+    <h2 data-i18n="importT">Import products from CSV</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.5" data-i18n="importHint">Columns: barcode, name, warehouse, price, stock — one row per product per warehouse. Warehouse names must match exactly. Re-importing the same barcode + warehouse updates it.</p>
+    <button type="button" class="ghost-btn" id="import-template-btn">⬇️ <span data-i18n="downloadTemplate">Download template</span></button>
+    <button type="button" class="ghost-btn" id="import-pick-btn">📄 <span data-i18n="chooseFile">Choose CSV file</span></button>
+    <input type="file" id="import-file" accept=".csv,text/csv" style="display:none">
+    <div id="import-summary" style="font-size:13px;display:flex;flex-direction:column;gap:6px"></div>
+    <button type="button" class="primary-btn" id="import-confirm" style="display:none">📥 <span data-i18n="importConfirm">Import</span></button>
   </div>
 </div>
 

@@ -62,6 +62,17 @@ const I18N = {
     loading: 'Loading…', errGeneric: 'Something went wrong. Try again.',
     pwShort: 'Password must be at least 8 characters', pinFormat: 'PIN must be 4-6 numbers',
     uploadingPhoto: 'Uploading photo…', readOnly: 'Only the owner can change products',
+    importCsv: 'Import CSV', importT: 'Import products from CSV',
+    importHint: 'Columns: barcode, name, warehouse, price, stock — one row per product per warehouse. Warehouse names must match exactly. Re-importing the same barcode + warehouse updates it.',
+    downloadTemplate: 'Download template', chooseFile: 'Choose CSV file',
+    importPreviewCount: (n) => `${n} row${n === 1 ? '' : 's'} ready to import`,
+    importErrorsCount: (n) => `${n} row${n === 1 ? '' : 's'} skipped`,
+    importConfirm: 'Import', importDone: (n) => `Imported ${n} row${n === 1 ? '' : 's'} ✔`,
+    whNotFound: (name) => `Warehouse "${name}" not found`,
+    invalidPrice: 'Invalid price', invalidStock: 'Invalid stock',
+    missingBarcode: 'Missing barcode', missingName: 'Missing name', missingWarehouse: 'Missing warehouse',
+    noValidRows: 'No rows found in this file', csvColumnsMissing: 'CSV must have columns: barcode, name, warehouse, price',
+    row: 'Row',
   },
   es: {
     tagline: 'Escanee un código. Vea la foto, el precio y el stock — al instante.',
@@ -110,6 +121,17 @@ const I18N = {
     loading: 'Cargando…', errGeneric: 'Algo salió mal. Intente de nuevo.',
     pwShort: 'La contraseña debe tener al menos 8 caracteres', pinFormat: 'El PIN debe tener 4-6 números',
     uploadingPhoto: 'Subiendo foto…', readOnly: 'Solo el dueño puede cambiar productos',
+    importCsv: 'Importar CSV', importT: 'Importar productos desde CSV',
+    importHint: 'Columnas: barcode, name, warehouse, price, stock — una fila por producto y almacén. Los nombres de almacén deben coincidir exactamente. Reimportar el mismo código + almacén lo actualiza.',
+    downloadTemplate: 'Descargar plantilla', chooseFile: 'Elegir archivo CSV',
+    importPreviewCount: (n) => `${n} fila${n === 1 ? '' : 's'} lista${n === 1 ? '' : 's'} para importar`,
+    importErrorsCount: (n) => `${n} fila${n === 1 ? '' : 's'} omitida${n === 1 ? '' : 's'}`,
+    importConfirm: 'Importar', importDone: (n) => `${n} fila${n === 1 ? '' : 's'} importada${n === 1 ? '' : 's'} ✔`,
+    whNotFound: (name) => `Almacén "${name}" no encontrado`,
+    invalidPrice: 'Precio inválido', invalidStock: 'Stock inválido',
+    missingBarcode: 'Falta el código de barras', missingName: 'Falta el nombre', missingWarehouse: 'Falta el almacén',
+    noValidRows: 'No se encontraron filas en este archivo', csvColumnsMissing: 'El CSV debe tener las columnas: barcode, name, warehouse, price',
+    row: 'Fila',
   },
   ar: {
     tagline: 'امسح الباركود. شاهد الصورة والسعر والمخزون — فورًا.',
@@ -158,6 +180,17 @@ const I18N = {
     loading: 'جارٍ التحميل…', errGeneric: 'حدث خطأ. حاول مرة أخرى.',
     pwShort: 'كلمة المرور 8 أحرف على الأقل', pinFormat: 'الرقم السري 4-6 أرقام',
     uploadingPhoto: 'جارٍ رفع الصورة…', readOnly: 'المالك فقط يمكنه تغيير المنتجات',
+    importCsv: 'استيراد CSV', importT: 'استيراد المنتجات من CSV',
+    importHint: 'الأعمدة: barcode, name, warehouse, price, stock — صف لكل منتج ومستودع. يجب أن تطابق أسماء المستودعات تمامًا. إعادة استيراد نفس الباركود + المستودع يحدّثه.',
+    downloadTemplate: 'تحميل نموذج', chooseFile: 'اختر ملف CSV',
+    importPreviewCount: (n) => `${n} صف جاهز للاستيراد`,
+    importErrorsCount: (n) => `${n} صف تم تخطيه`,
+    importConfirm: 'استيراد', importDone: (n) => `تم استيراد ${n} صف ✔`,
+    whNotFound: (name) => `المستودع "${name}" غير موجود`,
+    invalidPrice: 'سعر غير صالح', invalidStock: 'مخزون غير صالح',
+    missingBarcode: 'الباركود مفقود', missingName: 'الاسم مفقود', missingWarehouse: 'المستودع مفقود',
+    noValidRows: 'لم يتم العثور على صفوف في هذا الملف', csvColumnsMissing: 'يجب أن يحتوي CSV على الأعمدة: barcode, name, warehouse, price',
+    row: 'صف',
   },
 };
 const LANG_NAMES = { en: 'English', es: 'Español', ar: 'العربية' };
@@ -947,6 +980,142 @@ async function deleteProduct() {
   showScreen('admin');
 }
 
+// ---------------- CSV import ----------------
+let importValidRows = [];
+function openImportSheet() {
+  if (enforceSubscription()) return;
+  importValidRows = [];
+  $('import-file').value = '';
+  $('import-summary').innerHTML = '';
+  $('import-confirm').style.display = 'none';
+  $('import-sheet').classList.add('open');
+}
+function csvEscape(s) {
+  s = String(s ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function downloadCsvTemplate() {
+  const whName = warehouses[0]?.name || 'Main Warehouse';
+  const rows = [
+    ['barcode', 'name', 'warehouse', 'price', 'stock'],
+    ['5012345678900', 'Rice 5kg', whName, '12.99', '40'],
+  ];
+  const csv = rows.map((r) => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'scanstock-products-template.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+// Minimal RFC4180-ish parser: handles quoted fields, escaped quotes, CRLF/LF.
+function parseCsvText(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false; }
+      else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = '';
+      if (row.length > 1 || row[0] !== '') rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+function onImportFilePicked(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try { previewImport(String(reader.result)); }
+    catch (e) { $('import-summary').innerHTML = `<div>${esc(e.message)}</div>`; $('import-confirm').style.display = 'none'; }
+  };
+  reader.readAsText(file);
+}
+function previewImport(text) {
+  const rows = parseCsvText(text).filter((r) => r.some((c) => c.trim() !== ''));
+  if (!rows.length) throw new Error(t('noValidRows'));
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const idx = {
+    barcode: header.indexOf('barcode'), name: header.indexOf('name'),
+    warehouse: header.indexOf('warehouse'), price: header.indexOf('price'), stock: header.indexOf('stock'),
+  };
+  if (idx.barcode < 0 || idx.name < 0 || idx.warehouse < 0 || idx.price < 0) throw new Error(t('csvColumnsMissing'));
+  const whByName = new Map(warehouses.map((w) => [w.name.trim().toLowerCase(), w]));
+  const valid = [];
+  const errors = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const lineNo = i + 1;
+    const barcode = (r[idx.barcode] || '').trim();
+    const name = (r[idx.name] || '').trim();
+    const whName = (r[idx.warehouse] || '').trim();
+    const priceRaw = (r[idx.price] || '').trim().replace(',', '.');
+    const stockRaw = idx.stock >= 0 ? (r[idx.stock] || '').trim() : '';
+    if (!barcode) { errors.push(`${t('row')} ${lineNo}: ${t('missingBarcode')}`); continue; }
+    if (!name) { errors.push(`${t('row')} ${lineNo}: ${t('missingName')}`); continue; }
+    if (!whName) { errors.push(`${t('row')} ${lineNo}: ${t('missingWarehouse')}`); continue; }
+    const wh = whByName.get(whName.toLowerCase());
+    if (!wh) { errors.push(`${t('row')} ${lineNo}: ${t('whNotFound', whName)}`); continue; }
+    const price = parseFloat(priceRaw);
+    if (priceRaw === '' || isNaN(price) || price < 0) { errors.push(`${t('row')} ${lineNo}: ${t('invalidPrice')}`); continue; }
+    const stock = stockRaw === '' ? 0 : parseInt(stockRaw, 10);
+    if (isNaN(stock) || stock < 0) { errors.push(`${t('row')} ${lineNo}: ${t('invalidStock')}`); continue; }
+    valid.push({ barcode, name, warehouseId: wh.id, price, stock });
+  }
+  importValidRows = valid;
+  const parts = [`<div>${t('importPreviewCount', valid.length)}</div>`];
+  if (errors.length) {
+    parts.push(`<div style="color:var(--amber)">${t('importErrorsCount', errors.length)}</div>`);
+    parts.push(`<div style="max-height:140px;overflow:auto;opacity:.85">${errors.slice(0, 50).map((e) => `<div>${esc(e)}</div>`).join('')}</div>`);
+  }
+  $('import-summary').innerHTML = parts.join('');
+  $('import-confirm').style.display = valid.length ? 'block' : 'none';
+}
+function chunk(arr, n) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+async function runImport() {
+  if (!importValidRows.length) return;
+  busy(true);
+  try {
+    const nameByBarcode = new Map();
+    for (const r of importValidRows) if (!nameByBarcode.has(r.barcode)) nameByBarcode.set(r.barcode, r.name);
+    const productUpserts = [...nameByBarcode.entries()].map(([barcode, name]) => ({ business_id: business.id, barcode, name }));
+    let allProducts = [];
+    for (const c of chunk(productUpserts, 300)) {
+      const { data, error } = await sb.from('ss_products').upsert(c, { onConflict: 'business_id,barcode' }).select('id,barcode');
+      if (error) throw error;
+      allProducts = allProducts.concat(data);
+    }
+    const idByBarcode = new Map(allProducts.map((p) => [p.barcode, p.id]));
+    const stockUpserts = importValidRows.map((r) => ({
+      product_id: idByBarcode.get(r.barcode), warehouse_id: r.warehouseId, business_id: business.id, price: r.price, stock: r.stock,
+    }));
+    for (const c of chunk(stockUpserts, 300)) {
+      const { error } = await sb.from('ss_stock').upsert(c, { onConflict: 'product_id,warehouse_id' });
+      if (error) throw error;
+    }
+    await loadAll();
+    busy(false);
+    toast(t('importDone', stockUpserts.length));
+    $('import-sheet').classList.remove('open');
+    showScreen('admin');
+  } catch (e) {
+    busy(false);
+    toast(e.message || t('errGeneric'));
+  }
+}
+
 // ---------------- Subscribe screen ----------------
 function renderSubscribe() {
   $('sub-price').textContent = PRICE_TEXT[lang] || PRICE_TEXT.en;
@@ -1013,6 +1182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   on('admin-add', newProduct);
   on('admin-wh', openWhManager);
   on('admin-workers', openWorkers);
+  on('admin-import', openImportSheet);
   on('admin-settings', openSettings);
   on('admin-logout', logout);
   on('add-wh-btn', addWarehouse);
@@ -1024,6 +1194,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   on('form-save', saveProduct);
   on('form-delete', deleteProduct);
   on('sub-logout', logout);
+  on('import-template-btn', downloadCsvTemplate);
+  on('import-pick-btn', () => $('import-file').click());
+  on('import-confirm', runImport);
+  $('import-file').addEventListener('change', onImportFilePicked);
   $('photo-input').addEventListener('change', onPhotoPicked);
   $('search-input').addEventListener('input', renderHomeList);
   document.querySelectorAll('.sheet-backdrop').forEach((el) => {
