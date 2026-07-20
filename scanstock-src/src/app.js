@@ -172,7 +172,8 @@ function renderLangRowIn(row) {
 }
 
 // ---------------- State ----------------
-const WH_COLORS = ['#00d4ff', '#ffc24b', '#ff7ac8', '#7cff6b', '#b28bff', '#ff9f5c'];
+const WH_COLORS = ['#2554D4', '#B8790A', '#D6478F', '#1A9E6B', '#7C5CFA', '#E0692E'];
+const ICON = (name) => `<svg class="icon"><use href="#i-${name}"></use></svg>`;
 let session = null;
 let member = null;      // { id, display_name, role, business_id }
 let business = null;    // ss_businesses row
@@ -423,7 +424,7 @@ async function createBizSubmit() {
 function renderHome() {
   const w = getWh(currentWhId);
   $('home-wh-name').textContent = w ? w.name : '—';
-  $('home-wh-dot').style.background = w ? w.color : '#666';
+  $('home-wh-dot').style.background = w ? w.color : '#9AA3B5';
   $('nav-admin').style.display = isOwner() ? 'flex' : 'none';
   renderTrialBanner();
   renderHomeList();
@@ -446,7 +447,7 @@ function renderHomeList() {
       ? `<div class="price">${money(e.price)}</div><span class="stock-chip ${stockClass(e.stock)}">${stockLabel(e.stock)}</span>`
       : `<div class="price none">${t('noPrice')}</div>`;
     card.innerHTML = `
-      <div class="thumb-wrap">${p.photo_url ? `<img class="thumb" loading="lazy" src="${esc(p.photo_url)}" alt="">` : '<div class="thumb ph">📦</div>'}</div>
+      <div class="thumb-wrap">${p.photo_url ? `<img class="thumb" loading="lazy" src="${esc(p.photo_url)}" alt="">` : `<div class="thumb ph">${ICON('box')}</div>`}</div>
       <div class="info"><div class="name">${esc(p.name)}</div>${priceHtml}</div>`;
     grid.appendChild(card);
   }
@@ -509,7 +510,7 @@ function showProduct(id) {
   } else {
     mainBox = `
       <div class="price-box" style="border-color:var(--border)">
-        <span class="dot" style="background:${cur ? cur.color : '#666'}"></span>
+        <span class="dot" style="background:${cur ? cur.color : '#9AA3B5'}"></span>
         <div class="grow">
           <div class="wh-name">${esc(cur ? cur.name : '—')}</div>
           <div class="amount out">${t('noPrice')}</div>
@@ -529,7 +530,7 @@ function showProduct(id) {
       </button>`;
   }).join('');
   body.innerHTML = `
-    ${p.photo_url ? `<img class="detail-photo" src="${esc(p.photo_url)}" alt="">` : '<div class="detail-photo ph">📦</div>'}
+    ${p.photo_url ? `<img class="detail-photo" src="${esc(p.photo_url)}" alt="">` : `<div class="detail-photo ph">${ICON('box')}</div>`}
     <div class="detail-info">
       <div>
         <div class="detail-name">${esc(p.name)}</div>
@@ -555,7 +556,7 @@ function buildKeypad() {
   for (const k of keys) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = k === 'GO' ? '✔' : k;
+    b.innerHTML = k === 'GO' ? ICON('check') : k;
     if (k === 'GO') b.className = 'go';
     if (k === '⌫') b.className = 'del';
     b.onclick = () => {
@@ -699,10 +700,10 @@ function renderAdmin() {
     b.onclick = () => editProduct(p.id);
     const whCount = warehouses.filter((w) => stock[stKey(p.id, w.id)]?.price != null).length;
     b.innerHTML = `
-      ${p.photo_url ? `<img loading="lazy" src="${esc(p.photo_url)}" alt="">` : '<div class="mini-ph">📦</div>'}
+      ${p.photo_url ? `<img loading="lazy" src="${esc(p.photo_url)}" alt="">` : `<div class="mini-ph">${ICON('box')}</div>`}
       <div class="grow">
         <div class="name">${esc(p.name)}</div>
-        <div class="sub">▮▮ ${esc(p.barcode)} · ${whCount} 🏭</div>
+        <div class="sub">▮▮ ${esc(p.barcode)} · ${whCount} ${ICON('factory')}</div>
       </div>
       <span class="chev">›</span>`;
     list.appendChild(b);
@@ -728,7 +729,7 @@ function openWhManager() {
     };
     const del = document.createElement('button');
     del.type = 'button';
-    del.textContent = '🗑';
+    del.innerHTML = ICON('trash');
     del.className = 'icon-only';
     del.onclick = () => deleteWarehouse(w.id);
     row.appendChild(input);
@@ -769,12 +770,12 @@ function openWorkers() {
   for (const m of members) {
     const row = document.createElement('div');
     row.className = 'wh-row';
-    row.innerHTML = `<span style="font-size:20px">${m.role === 'owner' ? '👑' : '👤'}</span>
+    row.innerHTML = `<span style="font-size:20px;color:var(--accent)">${m.role === 'owner' ? ICON('crown') : ICON('user')}</span>
       <span class="grow wname">${esc(m.display_name)}</span>`;
     if (m.role !== 'owner') {
       const del = document.createElement('button');
       del.type = 'button';
-      del.textContent = '🗑';
+      del.innerHTML = ICON('trash');
       del.className = 'icon-only';
       del.onclick = async () => {
         if (!confirm(t('confirmDeleteWorker'))) return;

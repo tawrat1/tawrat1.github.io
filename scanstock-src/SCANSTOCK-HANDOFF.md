@@ -127,11 +127,20 @@ Notes:
 
 ## Design system (for any new screens)
 
-Dark navy + electric blue. Tokens: bg `#060D1F`/`#0b1015`, card `#101E3C`–`#1a242f`, border `#27374a`, primary `#3B82F6`, accent `#38BDF8`/`#00d4ff`, success `#34D399`/`#00e5a0`, warn `#FBBF24`, danger `#F87171`/`#ff5c72`, text `#F2F6FF`, muted `#9FB0CC`. 8pt spacing grid, radii 12/18/24, big touch targets (≥44px), status always icon+label (never color alone), picture-first minimal-text UX. System sans (Inter on desktop).
+**Redesigned 2026-07-21** — light theme, real SVG icons, no emoji anywhere. The original dark-navy/electric-blue/emoji look (documented in `design/dashboard.html` and its Figma file) is now stale; that mockup has NOT been updated to match and should be re-skinned before it's built, not followed as-is.
+
+Current tokens: bg `#F6F7FB`, surface/card `#FFFFFF`, border `#E4E7EE`, accent `#2554D4` (secondary `#1740A6` for gradients), success `#1A9E6B`, warn `#B8790A`, danger `#D64545`, text `#182034`, muted `#6B7385`. Warehouse dot colors (`WH_COLORS` in `app.js`): `#2554D4 #B8790A #D6478F #1A9E6B #7C5CFA #E0692E`.
+
+Icons: a single inline `<svg><symbol>` sprite near the top of `index.template.html` (ids `i-camera`, `i-dollar`, `i-home`, `i-gear`, `i-box`, `i-factory`, `i-users`, `i-user`, `i-crown`, `i-file`, `i-search`, `i-plus`, `i-logout`, `i-close`, `i-minus`, `i-trash`, `i-pencil`, `i-lock`, `i-question`, `i-clock`, `i-download`, `i-alert`, `i-check`), referenced via `<svg class="icon"><use href="#i-name"></use></svg>`. In JS-generated HTML, use the `ICON('name')` helper in `app.js` rather than writing the tag by hand. Icon size is controlled purely by the parent element's `font-size` (the `.icon` class is `width/height: 1em`) — `.big-ico` (44px) for hero/empty-state icons, `.ico` (24px) for nav/tool icons. Do not reintroduce emoji as UI icons; plain Unicode glyphs used as typographic accents (`›` chevron, `▮▮` barcode-line texture, `✔` in toast copy) are fine and were deliberately left alone.
+
+The scan/sell camera screen (`#screen-scan`) is the one deliberate exception and stays dark — it's a live camera viewfinder, and every scanner UI (banking, boarding passes, delivery apps) keeps that screen dark regardless of the app's theme for contrast reasons. Don't "fix" it to match the light theme.
+
+8pt spacing grid, radii 12/18/24, big touch targets (≥44px), status always icon+label (never color alone), picture-first minimal-text UX unchanged from before. System sans (no custom webfont — deliberately avoided to keep the single-file build lightweight and dependency-free; distinctiveness comes from weight/tracking/scale, not a new typeface). Buttons get a subtle `:active { transform: scale(.97) }` press state and sheets slide up with a `transform`/`opacity` transition (both respect `prefers-reduced-motion`).
+
+Design proof (not wired to code, kept for reference): https://claude.ai/code/artifact/c8879f29-d9c0-4007-9977-b1a148a62907
 
 ## Hard-won gotchas
 
-- Emojis are used as image placeholders and demo-product images (canvas-rendered data URLs).
 - `ss_stock` upserts need `business_id` set (RLS checks it); price cleared in the form ⇒ delete that stock row.
 - The whole app is ONE html file on purpose — the owner deploys by drag-and-drop. Keep it that way unless the owner agrees to a real pipeline.
 - Playwright in cloud sandboxes: launch with `executablePath: '/opt/pw-browsers/chromium'` if `PLAYWRIGHT_BROWSERS_PATH` is set; locally, plain `chromium.launch()` is fine.
