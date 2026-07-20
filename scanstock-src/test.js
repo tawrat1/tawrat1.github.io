@@ -93,8 +93,9 @@ async function seedSession(page) {
   console.log('worker login screen:', await page.locator('#screen-worker.active').count());
   // language switch on landing
   await page.click('#worker-back');
-  await page.locator('#screen-landing .lang-row button', { hasText: 'Español' }).click();
-  console.log('ES hero:', (await page.locator('.hero h1').textContent()).slice(0, 30) + '…');
+  await page.locator('#screen-landing .lang-row button', { hasText: 'پښتو' }).click();
+  console.log('PS hero:', (await page.locator('.hero h1').textContent()).slice(0, 30) + '…');
+  console.log('PS dir:', await page.evaluate(() => document.documentElement.dir));
   await page.locator('#screen-landing .lang-row button', { hasText: 'English' }).click();
   await page.close();
 

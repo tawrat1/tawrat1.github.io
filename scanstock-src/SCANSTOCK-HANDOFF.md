@@ -9,7 +9,7 @@ A mobile-first SaaS web app for small shops/warehouses whose workers often **can
 
 - Owner: `tawrat1` (GitHub) / tawratrustam@gmail.com
 - Live app: **https://tawrat1.github.io/scanner/** (GitHub Pages, repo `tawrat1/tawrat1.github.io`, folder `scanner/`)
-- UI languages: English, Spanish, Arabic (full RTL). Design is picture-first / minimal reading.
+- UI languages: English, Pashto (full RTL). Design is picture-first / minimal reading. (Spanish/Arabic were the original placeholder languages; replaced 2026-07-20 with Pashto since the actual target workers are Afghan.)
 
 ## Architecture (all live, do not rebuild from scratch)
 
@@ -63,7 +63,7 @@ RLS pattern: SELECT for any member of the business (`business_id = ss_my_busines
 - Data flow: `loadAll()` fetches member→business→warehouses/products/stock/members in parallel; in-memory state + `localStorage` cache (`ss_cache`) for offline read; Supabase Realtime channel triggers debounced refetch. Photos: canvas-downscaled to ≤800px JPEG, uploaded to storage, public URL + cache-bust query saved on product.
 - Roles: workers get read-only UI (no Manage tab, no edit buttons, no add-product on not-found).
 - Trial/paywall: computed client-side from `trial_ends_at`/`subscription_status`; expired owners are routed to the subscribe screen. **Stripe Payment Link is read at runtime from `<meta name="ss-payment-link" content="">` (~line 8 of index.html)** so it can be edited without rebuilding. Empty ⇒ "contact us" fallback text.
-- i18n: `I18N` dict (en/es/ar), `t(key)`, `data-i18n` attributes, `dir=rtl` for Arabic.
+- i18n: `I18N` dict (en/ps), `t(key)`, `data-i18n` attributes, `dir=rtl` for Pashto.
 
 ### Build & test
 
