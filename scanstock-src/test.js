@@ -53,6 +53,10 @@ async function mockSupabase(page, data) {
     if (url.includes('/rest/v1/ss_warehouses')) return json(data.warehouses);
     if (url.includes('/rest/v1/ss_products')) return json(data.products);
     if (url.includes('/rest/v1/ss_stock')) return json(data.stock);
+    if (url.includes('/rest/v1/rpc/ss_record_sale')) {
+      const body = route.request().postDataJSON();
+      return json([{ new_stock: 100 - body.p_qty, sale_id: 'sale-1' }]);
+    }
     if (url.includes('/realtime/')) return route.abort();
     return json([]);
   });
@@ -158,6 +162,37 @@ async function seedSession(page) {
   await page.click('#import-confirm');
   await page.waitForTimeout(300);
   console.log('[owner] import sheet closed after confirm:', await page.locator('#import-sheet.open').count() === 0);
+  // Sell mode (camera is unavailable in this headless run, so it falls through to
+  // the existing "type barcode" manual-entry path -- exercises the same handleSell()
+  // code a real scan would call)
+  await page.click('#nav-home2');
+  await page.waitForTimeout(200);
+  await page.click('#sell-btn');
+  await page.waitForTimeout(800);
+  console.log('[sell] qty bar visible:', await page.locator('#sell-qty-bar.show').count());
+  await page.click('#sell-qty-plus');
+  await page.click('#sell-qty-plus');
+  console.log('[sell] qty after 2 taps:', await page.locator('#sell-qty-val').textContent());
+  console.log('[sell] camera error fallback shown:', await page.locator('#scan-err').isVisible());
+  await page.click('#scan-manual2');
+  await page.waitForTimeout(200);
+  console.log('[sell] on keypad after camera-fail fallback:', await page.locator('#screen-keypad.active').count());
+  for (const d of '012345678905') await page.locator('#keypad button', { hasText: new RegExp('^' + d + '$') }).click();
+  await page.locator('#keypad .go').click();
+  await page.waitForTimeout(300);
+  console.log('[sell] toast after sale:', await page.locator('#toast').textContent());
+  console.log('[sell] stayed on keypad (continuous sell):', await page.locator('#screen-keypad.active').count());
+  // leaving sell mode via home should not leave scanMode stuck on 'sell'
+  await page.click('#keypad-back');
+  await page.click('#open-keypad');
+  await page.waitForTimeout(200);
+  for (const d of '012345678905') await page.locator('#keypad button', { hasText: new RegExp('^' + d + '$') }).click();
+  await page.locator('#keypad .go').click();
+  await page.waitForTimeout(300);
+  console.log('[sell] scanMode reset -> plain lookup opens detail:', await page.locator('#screen-detail.active').count());
+  await page.click('#detail-back');
+  await page.click('#nav-admin');
+  await page.waitForTimeout(200);
   // add product form
   await page.click('#admin-add');
   await page.waitForTimeout(200);

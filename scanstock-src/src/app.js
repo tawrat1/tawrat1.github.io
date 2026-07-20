@@ -73,6 +73,11 @@ const I18N = {
     missingBarcode: 'Missing barcode', missingName: 'Missing name', missingWarehouse: 'Missing warehouse',
     noValidRows: 'No rows found in this file', csvColumnsMissing: 'CSV must have columns: barcode, name, warehouse, price',
     row: 'Row',
+    sellMode: 'SELL MODE', sellScanHint: 'Scan to sell',
+    sellNotFound: 'Not found — nothing sold',
+    sellNoPrice: (name) => `${name} has no price here — nothing sold`,
+    soldToast: (qty, name, left) => `Sold ${qty}× ${name} — ${left} left`,
+    soldOutToast: (qty, name) => `Sold ${qty}× ${name} — OUT OF STOCK`,
   },
   es: {
     tagline: 'Escanee un código. Vea la foto, el precio y el stock — al instante.',
@@ -132,6 +137,11 @@ const I18N = {
     missingBarcode: 'Falta el código de barras', missingName: 'Falta el nombre', missingWarehouse: 'Falta el almacén',
     noValidRows: 'No se encontraron filas en este archivo', csvColumnsMissing: 'El CSV debe tener las columnas: barcode, name, warehouse, price',
     row: 'Fila',
+    sellMode: 'MODO VENTA', sellScanHint: 'Escanee para vender',
+    sellNotFound: 'No encontrado — no se vendió nada',
+    sellNoPrice: (name) => `${name} no tiene precio aquí — no se vendió nada`,
+    soldToast: (qty, name, left) => `Vendido ${qty}× ${name} — quedan ${left}`,
+    soldOutToast: (qty, name) => `Vendido ${qty}× ${name} — AGOTADO`,
   },
   ar: {
     tagline: 'امسح الباركود. شاهد الصورة والسعر والمخزون — فورًا.',
@@ -191,6 +201,11 @@ const I18N = {
     missingBarcode: 'الباركود مفقود', missingName: 'الاسم مفقود', missingWarehouse: 'المستودع مفقود',
     noValidRows: 'لم يتم العثور على صفوف في هذا الملف', csvColumnsMissing: 'يجب أن يحتوي CSV على الأعمدة: barcode, name, warehouse, price',
     row: 'صف',
+    sellMode: 'وضع البيع', sellScanHint: 'امسح للبيع',
+    sellNotFound: 'غير موجود — لم يُباع شيء',
+    sellNoPrice: (name) => `${name} لا يوجد له سعر هنا — لم يُباع شيء`,
+    soldToast: (qty, name, left) => `تم بيع ${qty}× ${name} — تبقّى ${left}`,
+    soldOutToast: (qty, name) => `تم بيع ${qty}× ${name} — نفد المخزون`,
   },
 };
 const LANG_NAMES = { en: 'English', es: 'Español', ar: 'العربية' };
@@ -237,6 +252,8 @@ let formPhotoChanged = false;
 let lastUnknownBarcode = '';
 let scanMode = 'lookup';
 let scanReturnTo = 'home';
+let sellQty = 1;
+let sellBusy = false;
 let offline = false;
 
 const $ = (id) => document.getElementById(id);
@@ -606,7 +623,12 @@ function buildKeypad() {
     if (k === 'GO') b.className = 'go';
     if (k === '⌫') b.className = 'del';
     b.onclick = () => {
-      if (k === 'GO') { if (keypadValue) lookupBarcode(keypadValue); return; }
+      if (k === 'GO') {
+        if (!keypadValue) return;
+        if (scanMode === 'sell') { handleSell(keypadValue); keypadValue = ''; renderKeypadDisplay(); return; }
+        lookupBarcode(keypadValue);
+        return;
+      }
       if (k === '⌫') keypadValue = keypadValue.slice(0, -1);
       else if (keypadValue.length < 20) keypadValue += k;
       renderKeypadDisplay();
@@ -628,6 +650,8 @@ async function startScan(mode) {
   scanMode = mode;
   scanReturnTo = mode === 'form' ? 'form' : 'home';
   $('scan-err').style.display = 'none';
+  $('sell-qty-bar').classList.toggle('show', mode === 'sell');
+  $('scan-hint').textContent = mode === 'sell' ? t('sellScanHint') : t('scanHint');
   showScreen('scan');
   const video = $('scan-video');
   try {
@@ -656,7 +680,10 @@ async function nativeLoop(video) {
   while (scanActive) {
     try {
       const codes = await nativeDetector.detect(video);
-      if (codes.length && codes[0].rawValue) { onScanResult(codes[0].rawValue); return; }
+      if (codes.length && codes[0].rawValue) {
+        onScanResult(codes[0].rawValue);
+        if (scanMode !== 'sell') return; // lookup/form: one scan navigates away, so stop polling
+      }
     } catch (e) { /* frame not ready */ }
     await new Promise((r) => setTimeout(r, 180));
   }
@@ -669,6 +696,12 @@ function zxingLoop(video) {
 }
 function onScanResult(code) {
   if (!scanActive) return;
+  if (scanMode === 'sell') {
+    if (sellBusy) return; // ignore re-detections of the same code while a sale is in flight
+    if (navigator.vibrate) navigator.vibrate(80);
+    handleSell(code);
+    return;
+  }
   stopScan();
   if (navigator.vibrate) navigator.vibrate(80);
   if (scanMode === 'form') { $('form-barcode').value = code; showScreen('form'); }
@@ -679,6 +712,37 @@ function stopScan() {
   if (zxingReader) { try { zxingReader.stopContinuousDecode(); } catch (e) {} }
   if (scanStream) { scanStream.getTracks().forEach((tr) => tr.stop()); scanStream = null; }
   $('scan-video').srcObject = null;
+}
+
+// ---------------- Sell mode ----------------
+function startSellMode() {
+  if (enforceSubscription()) return;
+  sellQty = 1;
+  updateSellQtyUI();
+  startScan('sell');
+}
+function updateSellQtyUI() { $('sell-qty-val').textContent = '×' + sellQty; }
+async function handleSell(code) {
+  sellBusy = true;
+  try {
+    code = String(code).trim();
+    const p = products.find((p) => p.barcode === code);
+    if (!p) { toast(t('sellNotFound')); return; }
+    const e = stock[stKey(p.id, currentWhId)];
+    if (!e || e.price == null) { toast(t('sellNoPrice', p.name)); return; }
+    const qty = sellQty;
+    const { data, error } = await sb.rpc('ss_record_sale', { p_product_id: p.id, p_warehouse_id: currentWhId, p_qty: qty });
+    if (error) { toast(error.message || t('errGeneric')); return; }
+    const row = Array.isArray(data) ? data[0] : data;
+    const newStock = row ? row.new_stock : e.stock - qty;
+    stock[stKey(p.id, currentWhId)] = { ...e, stock: newStock };
+    cacheSave();
+    toast(newStock > 0 ? t('soldToast', qty, p.name, newStock) : t('soldOutToast', qty, p.name));
+    sellQty = 1;
+    updateSellQtyUI();
+  } finally {
+    setTimeout(() => { sellBusy = false; }, 700); // brief cooldown so a still-framed barcode isn't re-sold instantly
+  }
 }
 
 // ---------------- Admin ----------------
@@ -1165,14 +1229,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // app
   on('scan-btn', () => startScan('lookup'));
-  on('open-keypad', () => showScreen('keypad'));
+  on('sell-btn', startSellMode);
+  on('sell-qty-minus', () => { sellQty = Math.max(1, sellQty - 1); updateSellQtyUI(); });
+  on('sell-qty-plus', () => { sellQty = Math.min(99, sellQty + 1); updateSellQtyUI(); });
+  on('open-keypad', () => { scanMode = 'lookup'; showScreen('keypad'); });
   on('keypad-back', () => showScreen('home'));
   on('detail-back', () => showScreen('home'));
   on('detail-edit', () => editProduct(currentProductId));
   on('notfound-back', () => showScreen('home'));
   on('notfound-add', addProductWithBarcode);
   on('notfound-rescan', () => startScan('lookup'));
-  on('scan-close', () => { stopScan(); showScreen(scanReturnTo); });
+  on('scan-close', () => { stopScan(); if (scanMode === 'sell') scanMode = 'lookup'; showScreen(scanReturnTo); });
   on('scan-manual', () => { stopScan(); showScreen('keypad'); });
   on('scan-manual2', () => { stopScan(); showScreen('keypad'); });
   on('home-wh-pill', openWhPicker);

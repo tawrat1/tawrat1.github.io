@@ -95,6 +95,7 @@
 
   .home-body { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 16px; max-width: 560px; width: 100%; margin: 0 auto; }
   .scan-big { background: linear-gradient(135deg, #00b8e0, #0077ff); color: #fff; border-radius: 24px; padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; box-shadow: 0 8px 30px rgba(0,150,255,.35); }
+  .sell-big { background: linear-gradient(135deg, #00e5a0, #00b87e); color: #04301f; border-radius: 20px; padding: 18px 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 800; box-shadow: 0 8px 24px rgba(0,229,160,.28); }
   .scan-big .big-ico { font-size: 56px; line-height: 1; }
   .scan-big:active { transform: scale(.98); }
   .search-row { display: flex; gap: 10px; }
@@ -131,6 +132,10 @@
   .scan-hint { position: absolute; left: 0; right: 0; top: calc(42% + 140px); text-align: center; color: #fff; font-size: 17px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.8); padding: 0 20px; }
   .scan-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
   .scan-close { position: absolute; top: 14px; inset-inline-end: 14px; z-index: 5; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 22px; border: 1px solid rgba(255,255,255,.25); }
+  .sell-qty-bar { display: none; position: absolute; top: 14px; inset-inline-start: 14px; z-index: 5; align-items: center; gap: 12px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 6px 8px; }
+  .sell-qty-bar.show { display: flex; }
+  .sell-qty-bar button { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: 19px; font-weight: 700; border: none; }
+  .sell-qty-bar .qty-val { color: #fff; font-size: 17px; font-weight: 800; min-width: 34px; text-align: center; }
   .scan-err { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 30px; text-align: center; color: #fff; background: #000; }
 
   /* ---------- Keypad ---------- */
@@ -345,6 +350,10 @@
       <span class="big-ico">📷</span>
       <span data-i18n="scanBtn">SCAN BARCODE</span>
     </button>
+    <button type="button" class="sell-big" id="sell-btn">
+      <span style="font-size:22px">💰</span>
+      <span data-i18n="sellMode">SELL MODE</span>
+    </button>
     <div class="search-row">
       <input id="search-input" data-i18n-ph="searchPh" placeholder="Search product…">
       <button type="button" class="sq" onclick="document.getElementById('search-input').focus()">🔍</button>
@@ -370,7 +379,12 @@
   <div class="scan-view">
     <video id="scan-video" playsinline muted></video>
     <div class="scan-frame"></div>
-    <div class="scan-hint" data-i18n="scanHint">Point camera at the barcode</div>
+    <div class="scan-hint" id="scan-hint" data-i18n="scanHint">Point camera at the barcode</div>
+    <div class="sell-qty-bar" id="sell-qty-bar">
+      <button type="button" id="sell-qty-minus">−</button>
+      <span class="qty-val" id="sell-qty-val">×1</span>
+      <button type="button" id="sell-qty-plus">＋</button>
+    </div>
     <button type="button" class="scan-close" id="scan-close">✕</button>
     <div class="scan-err" id="scan-err">
       <span style="font-size:48px">🚫📷</span>
